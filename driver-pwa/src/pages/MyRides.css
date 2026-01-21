@@ -1,0 +1,41 @@
+.my-rides-page {
+  min-height: 100vh;
+}
+
+.ride-card {
+  margin-bottom: 1rem;
+}
+
+.ride-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.ride-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-assigned {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+

@@ -1,0 +1,25 @@
+{
+  "name": "FairFare Admin",
+  "short_name": "Admin",
+  "description": "Admin dashboard for FairFare Transportation",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+

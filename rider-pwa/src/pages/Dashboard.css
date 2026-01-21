@@ -1,0 +1,95 @@
+.dashboard-page {
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header h1 {
+  color: #2563eb;
+  font-size: 1.5rem;
+}
+
+.header div {
+  display: flex;
+  gap: 1rem;
+}
+
+.ride-card {
+  margin-bottom: 1rem;
+}
+
+.ride-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.ride-header h3 {
+  color: #1f2937;
+}
+
+.status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-assigned {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.ride-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.detail {
+  color: #4b5563;
+}
+
+.detail strong {
+  color: #1f2937;
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header div {
+    width: 100%;
+    flex-direction: column;
+  }
+  
+  .header button {
+    width: 100%;
+  }
+}
+

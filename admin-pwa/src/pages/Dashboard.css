@@ -1,0 +1,88 @@
+.dashboard-page {
+  min-height: 100vh;
+}
+
+.subtitle {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.driver-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.driver-info {
+  flex: 1;
+}
+
+.driver-info h3 {
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.driver-info p {
+  color: #4b5563;
+  margin: 0.25rem 0;
+}
+
+.status-badges {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.badge.approved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge.available {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge.busy {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.driver-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .driver-card {
+    flex-direction: column;
+  }
+  
+  .driver-actions {
+    width: 100%;
+    flex-direction: row;
+  }
+  
+  .driver-actions .btn {
+    flex: 1;
+  }
+}
+

@@ -1,0 +1,15 @@
+.driver-signup-page {
+  min-height: 100vh;
+  padding: 2rem 0;
+}
+
+.driver-signup-page h1 {
+  color: #10b981;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #6b7280;
+  margin-bottom: 2rem;
+}
+

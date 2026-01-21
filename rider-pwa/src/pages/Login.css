@@ -1,0 +1,38 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.login-card {
+  max-width: 400px;
+  text-align: center;
+}
+
+.login-card h1 {
+  color: #2563eb;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #6b7280;
+  margin-bottom: 2rem;
+}
+
+.register-link {
+  margin-top: 1.5rem;
+  color: #6b7280;
+}
+
+.register-link a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.register-link a:hover {
+  text-decoration: underline;
+}
+
