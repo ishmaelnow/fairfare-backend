@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import DriverSignup from './pages/DriverSignup';
@@ -33,6 +34,7 @@ function App() {
   return (
     <Router>
       <div className="app">
+        <Navbar />
         <Routes>
           <Route 
             path="/login" 
