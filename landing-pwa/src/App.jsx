@@ -117,6 +117,20 @@ function App() {
                 support@fairfaretransportation.app
               </a>
             </div>
+            <div className="contact-item">
+              <div className="contact-icon">📞</div>
+              <h3>Phone</h3>
+              <a href="tel:4692688239" className="contact-link">
+                (469) 268-8239
+              </a>
+            </div>
+            <div className="contact-item">
+              <div className="contact-icon">📞</div>
+              <h3>Phone</h3>
+              <a href="tel:4698357520" className="contact-link">
+                (469) 835-7520
+              </a>
+            </div>
           </div>
         </div>
       </section>
