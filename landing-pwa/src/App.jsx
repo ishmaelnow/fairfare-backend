@@ -1,6 +1,29 @@
+import { useState } from 'react'
 import './App.css'
+import { PrivacyPolicy } from './components/PrivacyPolicy'
+import { Home } from './components/Home'
 
 function App() {
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false)
+
+  if (showPrivacyPolicy) {
+    return (
+      <div className="app">
+        <nav className="navbar">
+          <div className="nav-container">
+            <div className="nav-logo">
+              <h2>FairFare</h2>
+            </div>
+            <ul className="nav-menu">
+              <li><button onClick={() => setShowPrivacyPolicy(false)} className="nav-link">Back to Home</button></li>
+            </ul>
+          </div>
+        </nav>
+        <PrivacyPolicy />
+      </div>
+    )
+  }
+
   return (
     <div className="app">
       <nav className="navbar">
@@ -43,6 +66,11 @@ function App() {
             <p>Accept rides and manage your trips</p>
           </a>
         </div>
+      </div>
+
+      {/* Home Content - Features and Rates */}
+      <div className="container home-container">
+        <Home />
       </div>
 
       {/* About Section */}
@@ -96,6 +124,21 @@ function App() {
       <footer>
         <div className="container">
           <p>© {new Date().getFullYear()} FairFare Transportation. All rights reserved.</p>
+          <p style={{ marginTop: '15px' }}>
+            <button 
+              onClick={() => setShowPrivacyPolicy(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#ccc',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                fontSize: '0.9rem'
+              }}
+            >
+              Privacy Policy
+            </button>
+          </p>
         </div>
       </footer>
     </div>
