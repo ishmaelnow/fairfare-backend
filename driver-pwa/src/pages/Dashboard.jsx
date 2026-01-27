@@ -1,175 +1,454 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
+import { formatCurrency } from '../lib/fare';
+import { Button } from '../components/Button';
+import { Card } from '../components/Card';
+import { RideMap } from '../components/RideMap';
+import Navbar from '../components/Navbar';
 import './Dashboard.css';
 
 const Dashboard = ({ onLogout }) => {
-  const [driverInfo, setDriverInfo] = useState(null);
-  const [assignedRides, setAssignedRides] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+  const [availableRides, setAvailableRides] = useState([]);
+  const [activeRide, setActiveRide] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [updatingAvailability, setUpdatingAvailability] = useState(false);
+  const channelRef = useRef(null);
 
   useEffect(() => {
-    fetchDriverInfo();
-  }, []);
-
-  useEffect(() => {
-    // Fetch rides when driver info is loaded
-    if (driverInfo) {
-      fetchAssignedRides();
+    if (user) {
+      loadProfile();
     }
-  }, [driverInfo]);
+  }, [user]);
 
-  const fetchDriverInfo = async () => {
-    try {
-      const response = await api.get('/drivers/me');
-      setDriverInfo(response.data);
-    } catch (err) {
-      // If 404, user is not a driver yet
-      if (err.response?.status === 404) {
-        setDriverInfo(null);
-      } else {
-        console.error('Error fetching driver info:', err);
+  useEffect(() => {
+    if (!profile) return;
+
+    checkActiveRide();
+    if (profile.is_available) {
+      loadAvailableRides();
+      subscribeToNewRides();
+      startLocationTracking();
+    }
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
       }
+    };
+  }, [profile]);
+
+  const loadProfile = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('driver_profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (error || !data) {
+      navigate('/driver-signup');
+      return;
+    }
+
+    setProfile(data);
+    setLoading(false);
+  };
+
+  const checkActiveRide = async () => {
+    if (!profile) return;
+
+    const { data } = await supabase
+      .from('rides')
+      .select('*')
+      .eq('driver_id', profile.id)
+      .in('status', ['accepted', 'arriving', 'in_progress'])
+      .order('requested_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (data) {
+      navigate(`/ride/${data.id}`);
     }
   };
 
-  const fetchAssignedRides = async () => {
-    try {
-      const response = await api.get('/drivers/my-rides');
-      setAssignedRides(response.data.rides || []);
-    } catch (err) {
-      if (err.response?.status === 404) {
-        // Driver profile not found, no rides
-        setAssignedRides([]);
-      } else {
-        console.error('Error fetching rides:', err);
-      }
-    } finally {
-      setLoading(false);
+  const loadAvailableRides = async () => {
+    if (!profile) return;
+
+    let query = supabase
+      .from('rides')
+      .select('*')
+      .in('status', ['matching', 'requested'])
+      .is('driver_id', null);
+
+    if (profile.vehicle_type) {
+      query = query.or(`vehicle_type.is.null,vehicle_type.eq.${profile.vehicle_type}`);
     }
+
+    const { data } = await query
+      .order('requested_at', { ascending: true })
+      .limit(20);
+
+    const now = new Date();
+    const availableRides = (data || []).filter((ride) => {
+      if (ride.scheduled_at) {
+        const scheduledTime = new Date(ride.scheduled_at);
+        return scheduledTime <= now;
+      }
+      return true;
+    }).slice(0, 5);
+
+    setAvailableRides(availableRides);
+  };
+
+  const subscribeToNewRides = () => {
+    const channel = supabase
+      .channel('available-rides')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'rides',
+        },
+        (payload) => {
+          const newRide = payload.new;
+          if ((newRide.status === 'matching' || newRide.status === 'requested') && !newRide.driver_id) {
+            if (!profile) return;
+            
+            if (newRide.scheduled_at) {
+              const scheduledTime = new Date(newRide.scheduled_at);
+              const now = new Date();
+              if (scheduledTime > now) return;
+            }
+            
+            if (!newRide.vehicle_type || !profile.vehicle_type || newRide.vehicle_type === profile.vehicle_type) {
+              setAvailableRides((prev) => [newRide, ...prev].slice(0, 5));
+            }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'rides',
+        },
+        (payload) => {
+          const updatedRide = payload.new;
+          if (updatedRide.status !== 'matching' && updatedRide.status !== 'requested' || updatedRide.driver_id) {
+            setAvailableRides((prev) => prev.filter((r) => r.id !== updatedRide.id));
+          }
+        }
+      )
+      .subscribe();
+
+    channelRef.current = channel;
   };
 
   const toggleAvailability = async () => {
-    if (!driverInfo) return;
-    
+    if (!profile) return;
+
+    setUpdatingAvailability(true);
     try {
-      await api.patch(`/drivers/${driverInfo._id}/availability`, {
-        isAvailable: !driverInfo.isAvailable
-      });
-      setDriverInfo({ ...driverInfo, isAvailable: !driverInfo.isAvailable });
-      
-      // Refresh assigned rides after toggling availability
-      // (in case a ride was assigned when driver went online)
-      setTimeout(() => {
-        fetchAssignedRides();
-      }, 1000);
-    } catch (err) {
+      const newAvailability = !profile.is_available;
+      const { error } = await supabase
+        .from('driver_profiles')
+        .update({
+          is_available: newAvailability,
+          last_location_updated_at: new Date().toISOString(),
+        })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+
+      setProfile({ ...profile, is_available: newAvailability });
+
+      if (newAvailability) {
+        await updateLocation();
+      }
+    } catch (error) {
+      console.error('Error updating availability:', error);
       alert('Failed to update availability');
+    } finally {
+      setUpdatingAvailability(false);
     }
   };
 
-  return (
-    <div className="dashboard-page">
-      <div className="header">
-        <h1>Driver Dashboard</h1>
-        <div>
-          <button onClick={() => navigate('/my-rides')} className="btn-secondary">My Rides</button>
-          {!driverInfo && (
-            <button onClick={() => navigate('/driver-signup')} className="btn-primary">
-              Apply as Driver
-            </button>
-          )}
-          {driverInfo?.isApproved && (
-            <button 
-              onClick={toggleAvailability}
-              className={`btn ${driverInfo.isAvailable ? 'btn-danger' : 'btn-success'}`}
-            >
-              {driverInfo.isAvailable ? 'Go Offline' : 'Go Online'}
-            </button>
-          )}
-          <button onClick={onLogout} className="btn-logout">Logout</button>
+  const updateLocation = async () => {
+    if (!profile) return;
+
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          await supabase
+            .from('driver_profiles')
+            .update({
+              last_location_lat: position.coords.latitude,
+              last_location_lng: position.coords.longitude,
+              last_location_updated_at: new Date().toISOString(),
+            })
+            .eq('id', profile.id);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+        }
+      );
+    }
+  };
+
+  const startLocationTracking = () => {
+    if (!profile || !profile.is_available) return;
+
+    if ('geolocation' in navigator) {
+      const watchId = navigator.geolocation.watchPosition(
+        async (position) => {
+          await supabase
+            .from('driver_profiles')
+            .update({
+              last_location_lat: position.coords.latitude,
+              last_location_lng: position.coords.longitude,
+              last_location_updated_at: new Date().toISOString(),
+            })
+            .eq('id', profile.id);
+        },
+        (error) => {
+          console.error('Error tracking location:', error);
+        },
+        { enableHighAccuracy: true, maximumAge: 30000 }
+      );
+
+      return () => {
+        navigator.geolocation.clearWatch(watchId);
+      };
+    }
+  };
+
+  const handleAcceptRide = async (rideId) => {
+    if (!profile) {
+      alert('Driver profile not loaded. Please refresh the page.');
+      return;
+    }
+
+    try {
+      const { data: ride, error: fetchError } = await supabase
+        .from('rides')
+        .select('*')
+        .eq('id', rideId)
+        .maybeSingle();
+
+      if (fetchError || !ride) {
+        alert('This ride is no longer available');
+        loadAvailableRides();
+        return;
+      }
+
+      if (ride.status !== 'matching' && ride.status !== 'requested') {
+        alert('This ride is no longer available');
+        loadAvailableRides();
+        return;
+      }
+
+      if (ride.driver_id && ride.driver_id !== profile.id) {
+        alert('This ride has been accepted by another driver');
+        loadAvailableRides();
+        return;
+      }
+
+      const { error } = await supabase
+        .from('rides')
+        .update({
+          driver_id: profile.id,
+          status: 'accepted',
+          accepted_at: new Date().toISOString(),
+        })
+        .eq('id', rideId);
+
+      if (error) throw error;
+
+      navigate(`/ride/${rideId}`);
+    } catch (error) {
+      console.error('Error accepting ride:', error);
+      alert('Failed to accept ride. Please try again.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="driver-dashboard-page">
+          <div className="driver-dashboard-loading">
+            <div className="spinner"></div>
+            <p>Loading dashboard...</p>
+          </div>
         </div>
-      </div>
-      
-      <div className="container">
-        {loading && <div className="loading">Loading...</div>}
-        
-        {driverInfo && (
-          <div className="card">
-            <h2>Driver Status</h2>
-            <div className="driver-status">
-              <p><strong>Name:</strong> {driverInfo.name}</p>
-              <p><strong>Vehicle:</strong> {driverInfo.vehicle}</p>
-              <p><strong>Status:</strong> 
-                <span className={`status status-${driverInfo.isApproved ? 'approved' : 'pending'}`}>
-                  {driverInfo.isApproved ? 'Approved' : 'Pending Approval'}
-                </span>
-              </p>
-              {driverInfo.isApproved && (
-                <div className="availability-toggle">
-                  <p><strong>Availability:</strong> 
-                    <span className={`status status-${driverInfo.isAvailable ? 'available' : 'busy'}`}>
-                      {driverInfo.isAvailable ? 'Available' : 'Offline'}
-                    </span>
-                  </p>
-                  <button 
-                    onClick={toggleAvailability}
-                    className={`btn ${driverInfo.isAvailable ? 'btn-danger' : 'btn-success'}`}
-                  >
-                    {driverInfo.isAvailable ? 'Go Offline' : 'Go Online'}
-                  </button>
-                </div>
-              )}
+      </>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <>
+        <Navbar />
+        <div className="driver-dashboard-page">
+          <Card className="driver-dashboard-card">
+            <h2>Driver Profile Not Found</h2>
+            <p>You need to complete driver registration first.</p>
+            <Button onClick={() => navigate('/driver-signup')} variant="primary">
+              Complete Registration
+            </Button>
+          </Card>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Navbar />
+      <div className="driver-dashboard-page">
+        <div className="driver-dashboard-container">
+          <Card className="driver-dashboard-card">
+            <div className="driver-dashboard-header">
+              <div>
+                <h1 className="driver-dashboard-title">Driver Dashboard</h1>
+                <p className="driver-dashboard-subtitle">
+                  {user?.full_name || 'Driver'}
+                </p>
+              </div>
+              <Button
+                onClick={toggleAvailability}
+                variant={profile.is_available ? 'danger' : 'primary'}
+                disabled={updatingAvailability}
+              >
+                {updatingAvailability
+                  ? 'Updating...'
+                  : profile.is_available
+                  ? '🟢 Go Offline'
+                  : '⚫ Go Online'}
+              </Button>
             </div>
-          </div>
-        )}
-        
-        {!driverInfo && (
-          <div className="card">
-            <p>You haven't applied as a driver yet.</p>
-            <button onClick={() => navigate('/driver-signup')} className="btn btn-primary">
-              Apply Now
-            </button>
-          </div>
-        )}
-        
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h2>Assigned Rides</h2>
-            <button 
-              onClick={fetchAssignedRides} 
-              className="btn btn-secondary"
-              style={{ width: 'auto', margin: 0, padding: '0.5rem 1rem', fontSize: '0.875rem' }}
-            >
-              Refresh
-            </button>
-          </div>
-          {assignedRides.length === 0 ? (
-            <p>No rides assigned yet.</p>
-          ) : (
-            assignedRides.map((ride) => (
-              <div key={ride.id} className="ride-item">
-                <div className="ride-header">
-                  <h3>Ride #{ride.id}</h3>
-                  <span className={`status status-${ride.status}`}>{ride.status}</span>
-                </div>
-                <div className="ride-details">
-                  <p><strong>Rider:</strong> {ride.riderName}</p>
-                  <p><strong>Phone:</strong> {ride.phoneNumber}</p>
-                  <p><strong>Email:</strong> {ride.email}</p>
-                  <p><strong>From:</strong> {ride.pickupLocation}</p>
-                  <p><strong>To:</strong> {ride.dropoffLocation}</p>
-                  <p><strong>Pickup Time:</strong> {new Date(ride.pickupTime).toLocaleString()}</p>
+
+            <div className="driver-stats">
+              <div className="driver-stat">
+                <div className="stat-label">Rating</div>
+                <div className="stat-value">
+                  ⭐ {(profile.rating_avg || 0).toFixed(1)}
                 </div>
               </div>
-            ))
+              <div className="driver-stat">
+                <div className="stat-label">Total Trips</div>
+                <div className="stat-value">{profile.total_trips || 0}</div>
+              </div>
+              <div className="driver-stat">
+                <div className="stat-label">Status</div>
+                <div className={`stat-value status-${profile.is_available ? 'online' : 'offline'}`}>
+                  {profile.is_available ? '🟢 Online' : '⚫ Offline'}
+                </div>
+              </div>
+            </div>
+
+            {profile.vehicle_make && (
+              <div className="driver-vehicle-info">
+                <div className="vehicle-label">Vehicle</div>
+                <div className="vehicle-details">
+                  {profile.vehicle_color} {profile.vehicle_make} {profile.vehicle_model}
+                  {profile.vehicle_year && ` (${profile.vehicle_year})`}
+                </div>
+                <div className="vehicle-plate">Plate: {profile.vehicle_plate}</div>
+              </div>
+            )}
+          </Card>
+
+          {profile.is_available ? (
+            <Card className="driver-dashboard-card">
+              <h2 className="section-title">Available Rides</h2>
+              {availableRides.length === 0 ? (
+                <div className="no-rides">
+                  <p>No rides available at the moment.</p>
+                  <p className="hint">Rides will appear here when riders request them.</p>
+                </div>
+              ) : (
+                <div className="available-rides-list">
+                  {availableRides.map((ride) => (
+                    <div key={ride.id} className="available-ride-card">
+                      <div className="ride-card-header">
+                        <div>
+                          <h3 className="ride-id">Ride #{ride.id.slice(0, 8)}</h3>
+                          <div className="ride-fare">
+                            {formatCurrency(ride.fare_estimate || 0)}
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => handleAcceptRide(ride.id)}
+                          variant="primary"
+                          size="sm"
+                        >
+                          Accept
+                        </Button>
+                      </div>
+
+                      <div className="ride-locations">
+                        <div className="ride-location">
+                          <span className="location-icon pickup">📍</span>
+                          <div className="location-text">
+                            <div className="location-label">Pickup</div>
+                            <div className="location-address">{ride.pickup_address}</div>
+                          </div>
+                        </div>
+                        <div className="ride-location-divider"></div>
+                        <div className="ride-location">
+                          <span className="location-icon dropoff">📍</span>
+                          <div className="location-text">
+                            <div className="location-label">Dropoff</div>
+                            <div className="location-address">{ride.dropoff_address}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {ride.pickup_lat && ride.pickup_lng && (
+                        <div className="ride-map-preview">
+                          <RideMap
+                            pickupLat={ride.pickup_lat}
+                            pickupLng={ride.pickup_lng}
+                            dropoffLat={ride.dropoff_lat}
+                            dropoffLng={ride.dropoff_lng}
+                            pickupAddress={ride.pickup_address}
+                            dropoffAddress={ride.dropoff_address}
+                            height="200px"
+                          />
+                        </div>
+                      )}
+
+                      {ride.distance_miles && (
+                        <div className="ride-distance">
+                          Distance: {ride.distance_miles.toFixed(2)} miles
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          ) : (
+            <Card className="driver-dashboard-card">
+              <div className="offline-message">
+                <p>🔴 You're currently offline.</p>
+                <p>Go online to receive ride requests.</p>
+              </div>
+            </Card>
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
 export default Dashboard;
-

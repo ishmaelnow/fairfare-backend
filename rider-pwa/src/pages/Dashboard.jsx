@@ -1,24 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import './Dashboard.css';
 
 const Dashboard = ({ onLogout }) => {
+  const { user } = useAuth();
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchRides();
-  }, []);
+    if (user) {
+      fetchRides();
+    }
+  }, [user]);
 
   const fetchRides = async () => {
+    if (!user) return;
+
     try {
-      const response = await api.get('/users/rides');
-      setRides(response.data.rides || []);
+      const { data, error: fetchError } = await supabase
+        .from('rides')
+        .select('*')
+        .eq('rider_id', user.id)
+        .order('requested_at', { ascending: false });
+
+      if (fetchError) throw fetchError;
+      setRides(data || []);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load rides');
+      setError(err.message || 'Failed to load rides');
     } finally {
       setLoading(false);
     }
@@ -48,27 +60,41 @@ const Dashboard = ({ onLogout }) => {
         )}
         
         {rides.map((ride) => (
-          <div key={ride._id} className="card ride-card">
+          <div key={ride.id} className="card ride-card">
             <div className="ride-header">
-              <h3>Ride #{ride._id}</h3>
+              <h3>Ride #{ride.id.slice(0, 8)}</h3>
               <span className={`status status-${ride.status}`}>{ride.status}</span>
             </div>
             
             <div className="ride-details">
               <div className="detail">
-                <strong>From:</strong> {ride.pickupLocation}
+                <strong>From:</strong> {ride.pickup_address}
               </div>
               <div className="detail">
-                <strong>To:</strong> {ride.dropoffLocation}
+                <strong>To:</strong> {ride.dropoff_address}
               </div>
               <div className="detail">
-                <strong>Pickup Time:</strong> {new Date(ride.pickupTime).toLocaleString()}
+                <strong>Requested:</strong> {new Date(ride.requested_at).toLocaleString()}
               </div>
-              {ride.driverId && (
+              {ride.driver_id && (
                 <div className="detail">
                   <strong>Driver Assigned:</strong> Yes
                 </div>
               )}
+              {ride.fare && (
+                <div className="detail">
+                  <strong>Fare:</strong> ${ride.fare.toFixed(2)}
+                </div>
+              )}
+              <div className="detail">
+                <button 
+                  onClick={() => navigate(`/ride/${ride.id}`)}
+                  className="btn btn-primary"
+                  style={{ marginTop: '10px' }}
+                >
+                  View Details
+                </button>
+              </div>
             </div>
           </div>
         ))}

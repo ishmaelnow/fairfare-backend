@@ -1,88 +1,566 @@
-.dashboard-page {
+.admin-dashboard-page {
   min-height: 100vh;
+  background: #f3f4f6;
 }
 
-.subtitle {
-  color: #6b7280;
-  margin-bottom: 1.5rem;
-}
-
-.driver-card {
+.admin-dashboard-header {
+  background: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  background: #f9fafb;
+  align-items: center;
 }
 
-.driver-info {
+.admin-dashboard-header h1 {
+  color: #111827;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.admin-dashboard-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: #6b7280;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.admin-dashboard-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.admin-tab {
+  padding: 0.75rem 1.5rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: -2px;
+}
+
+.admin-tab:hover {
+  color: #111827;
+}
+
+.admin-tab.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.metric-icon {
+  font-size: 2rem;
+}
+
+.metric-content {
   flex: 1;
 }
 
-.driver-info h3 {
-  color: #1f2937;
-  margin-bottom: 0.5rem;
+.metric-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
 }
 
-.driver-info p {
-  color: #4b5563;
-  margin: 0.25rem 0;
+.metric-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
 }
 
-.status-badges {
-  margin-top: 1rem;
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.overview-card {
+  padding: 1.5rem;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.no-data {
+  text-align: center;
+  color: #6b7280;
+  padding: 2rem;
+}
+
+.active-rides-list {
   display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.active-ride-item {
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
+.ride-route {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
+  color: #111827;
+  flex: 1;
+  min-width: 200px;
 }
 
-.badge.approved {
+.ride-status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.status-completed,
+.status-approved {
   background: #d1fae5;
   color: #065f46;
 }
 
-.badge.pending {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.badge.available {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.badge.busy {
+.status-canceled,
+.status-rejected {
   background: #fee2e2;
   color: #991b1b;
 }
 
-.driver-actions {
+.status-in_progress,
+.status-accepted,
+.status-arriving {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-matching {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-inactive {
+  background: #e5e7eb;
+  color: #6b7280;
+}
+
+.status-online {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.ride-fare {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.metrics-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.metric-bar {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-@media (max-width: 768px) {
-  .driver-card {
-    flex-direction: column;
-  }
-  
-  .driver-actions {
-    width: 100%;
-    flex-direction: row;
-  }
-  
-  .driver-actions .btn {
-    flex: 1;
-  }
+.metric-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: #6b7280;
 }
 
+.metric-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.metric-bar-fill {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.metric-average {
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.metric-average-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.metric-average-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.rides-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.status-filter {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: white;
+  cursor: pointer;
+}
+
+.rides-table-container,
+.drivers-table-container,
+.applications-table-container {
+  overflow-x: auto;
+}
+
+.rides-table,
+.drivers-table,
+.applications-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.rides-table thead,
+.drivers-table thead,
+.applications-table thead {
+  background: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.rides-table th,
+.drivers-table th,
+.applications-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.rides-table td,
+.drivers-table td,
+.applications-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.rides-table tbody tr:hover,
+.drivers-table tbody tr:hover,
+.applications-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.ride-route-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.route-from {
+  font-weight: 500;
+  color: #111827;
+  font-size: 0.875rem;
+}
+
+.route-to {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.fare-cell {
+  font-weight: 600;
+  color: #111827;
+}
+
+.date-cell {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.chat-modal {
+  margin-top: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.chat-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.chat-modal-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.chat-modal-content {
+  height: 400px;
+}
+
+.driver-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.driver-name {
+  font-weight: 500;
+  color: #111827;
+}
+
+.driver-email {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.vehicle-cell {
+  font-size: 0.875rem;
+  color: #111827;
+}
+
+.vehicle-plate {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.driver-status-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.trips-cell,
+.rating-cell {
+  text-align: center;
+  font-weight: 500;
+}
+
+.applications-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.applications-stats {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.no-applications {
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.no-applications p {
+  margin: 0.5rem 0;
+  color: #92400e;
+}
+
+.no-applications p:first-child {
+  font-weight: 600;
+}
+
+.hint {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+.applications-section {
+  margin-bottom: 2rem;
+}
+
+.applications-subtitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.applicant-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.applicant-name {
+  font-weight: 500;
+  color: #111827;
+}
+
+.applicant-phone {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.vehicle-info-cell {
+  font-size: 0.875rem;
+  color: #111827;
+}
+
+.vehicle-details {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.license-cell {
+  font-size: 0.875rem;
+  color: #111827;
+}
+
+.insurance {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.application-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.notes-cell {
+  font-size: 0.875rem;
+  color: #6b7280;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-dashboard-card {
+  padding: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard-container {
+    padding: 1rem;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-tabs {
+    overflow-x: auto;
+  }
+
+  .rides-table-container,
+  .drivers-table-container,
+  .applications-table-container {
+    font-size: 0.875rem;
+  }
+
+  .rides-table th,
+  .drivers-table th,
+  .applications-table th,
+  .rides-table td,
+  .drivers-table td,
+  .applications-table td {
+    padding: 0.5rem;
+  }
+}

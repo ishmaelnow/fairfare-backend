@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { signUp } from '../lib/auth';
 import './Register.css';
 
 const Register = () => {
@@ -22,11 +22,11 @@ const Register = () => {
     setSuccess('');
 
     try {
-      await api.post('/users/register', formData);
+      await signUp(formData.email, formData.password, 'driver', formData.name);
       setSuccess('Registration successful! Redirecting to login...');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed. Please try again.');
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -95,4 +95,3 @@ const Register = () => {
 };
 
 export default Register;
-

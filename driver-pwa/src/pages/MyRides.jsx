@@ -1,28 +1,66 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import './MyRides.css';
 
 const MyRides = ({ onLogout }) => {
+  const { user } = useAuth();
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchRides();
-  }, []);
+    if (user) {
+      fetchRides();
+    }
+  }, [user]);
 
   const fetchRides = async () => {
+    if (!user) return;
+
     try {
-      const response = await api.get('/drivers/my-rides');
-      setRides(response.data.rides || []);
-    } catch (err) {
-      if (err.response?.status === 404) {
-        // Driver profile not found, no rides
+      // Get driver profile first
+      const { data: driverProfile } = await supabase
+        .from('driver_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!driverProfile) {
         setRides([]);
-      } else {
-        console.error('Error fetching rides:', err);
+        setLoading(false);
+        return;
       }
+
+      // Get all rides for this driver
+      const { data, error } = await supabase
+        .from('rides')
+        .select(`
+          *,
+          rider:profiles!rides_rider_id_fkey(full_name, email, phone)
+        `)
+        .eq('driver_id', driverProfile.id)
+        .order('requested_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Format rides data
+      const formattedRides = (data || []).map(ride => ({
+        id: ride.id,
+        status: ride.status,
+        riderName: ride.rider?.full_name || 'Unknown',
+        email: ride.rider?.email || '',
+        phoneNumber: ride.rider?.phone || '',
+        pickupLocation: ride.pickup_address,
+        dropoffLocation: ride.dropoff_address,
+        pickupTime: ride.requested_at,
+      }));
+
+      setRides(formattedRides);
+    } catch (err) {
+      console.error('Error fetching rides:', err);
+      setRides([]);
     } finally {
       setLoading(false);
     }

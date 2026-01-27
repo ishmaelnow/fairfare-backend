@@ -1,0 +1,187 @@
+.active-driver-ride-page {
+  min-height: 100vh;
+  padding: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.active-driver-ride-container {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.active-driver-ride-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: white;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.active-driver-ride-status-card {
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.status-badge-container {
+  display: flex;
+  justify-content: center;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
+.status-badge.status-accepted {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.status-arriving {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.status-in_progress {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-icon {
+  font-size: 1.25rem;
+}
+
+.status-text {
+  font-size: 1rem;
+}
+
+.active-driver-ride-card {
+  padding: 1.5rem;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.ride-map-section {
+  margin-bottom: 1rem;
+}
+
+.ride-locations {
+  margin-bottom: 1rem;
+}
+
+.ride-location-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.location-icon {
+  font-size: 1.125rem;
+  margin-top: 0.125rem;
+}
+
+.location-content {
+  flex: 1;
+}
+
+.location-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.location-address {
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.maps-link {
+  color: #2563eb;
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.maps-link:hover {
+  text-decoration: underline;
+}
+
+.ride-location-divider {
+  border-left: 2px solid #e5e7eb;
+  height: 16px;
+  margin-left: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.ride-fare-section {
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.fare-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.fare-row:last-child {
+  margin-bottom: 0;
+}
+
+.fare-label {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.fare-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.fare-value {
+  font-weight: 500;
+  color: #111827;
+}
+
+.chat-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.chat-container-section {
+  height: 400px;
+}
+
+

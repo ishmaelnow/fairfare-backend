@@ -1,35 +1,35 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { signOut } from './lib/auth';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import BookRide from './pages/BookRide';
 import Dashboard from './pages/Dashboard';
+import ActiveRide from './pages/ActiveRide';
 import './App.css';
 
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
-    setLoading(false);
-  }, []);
+function AppRoutes() {
+  const { user, loading } = useAuth();
 
   const handleLogin = () => {
-    setIsAuthenticated(true);
+    // Auth state will update automatically via AuthContext
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setIsAuthenticated(false);
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
+
+  const isAuthenticated = !!user;
 
   return (
     <Router>
@@ -52,10 +52,22 @@ function App() {
             path="/dashboard" 
             element={isAuthenticated ? <Dashboard onLogout={handleLogout} /> : <Navigate to="/login" />} 
           />
+          <Route 
+            path="/ride/:rideId" 
+            element={isAuthenticated ? <ActiveRide /> : <Navigate to="/login" />} 
+          />
           <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
         </Routes>
       </div>
     </Router>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 }
 

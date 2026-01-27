@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { signIn } from '../lib/auth';
 import './Login.css';
 
 const Login = ({ onLogin }) => {
@@ -20,15 +20,11 @@ const Login = ({ onLogin }) => {
     setError('');
 
     try {
-      const response = await api.post('/users/login', formData);
-      
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        onLogin();
-        navigate('/dashboard');
-      }
+      await signIn(formData.email, formData.password);
+      onLogin();
+      navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed. Please try again.');
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -79,4 +75,3 @@ const Login = ({ onLogin }) => {
 };
 
 export default Login;
-

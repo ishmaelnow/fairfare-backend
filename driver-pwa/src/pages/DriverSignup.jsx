@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../config/api';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import './DriverSignup.css';
 
 const DriverSignup = () => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     vehicleType: '',
     model: '',
@@ -27,6 +29,12 @@ const DriverSignup = () => {
     setError('');
     setSuccess('');
 
+    if (!user) {
+      setError('You must be logged in to become a driver.');
+      setLoading(false);
+      return;
+    }
+
     if (!formData.vehicleType || !formData.model || !formData.year || !formData.color || !formData.licensePlate) {
       setError('All fields are required.');
       setLoading(false);
@@ -34,11 +42,43 @@ const DriverSignup = () => {
     }
 
     try {
-      await api.post('/users/become-driver', formData);
-      setSuccess('Driver application submitted! Waiting for approval...');
+      // Check if driver profile already exists
+      const { data: existingProfile } = await supabase
+        .from('driver_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingProfile) {
+        setError('You already have a driver profile.');
+        setLoading(false);
+        return;
+      }
+
+      // Create driver profile in Supabase
+      const { error: insertError } = await supabase
+        .from('driver_profiles')
+        .insert({
+          user_id: user.id,
+          vehicle_make: formData.model.split(' ')[0] || formData.model, // Extract make from model
+          vehicle_model: formData.model,
+          vehicle_year: parseInt(formData.year),
+          vehicle_color: formData.color,
+          vehicle_plate: formData.licensePlate,
+          license_number: '', // Will be filled later if needed
+          is_available: false,
+          is_active: true,
+        });
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      setSuccess('Driver profile created successfully! Redirecting to dashboard...');
       setTimeout(() => navigate('/dashboard'), 2000);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to submit application. Please try again.');
+      console.error('Driver signup error:', err);
+      setError(err.message || 'Failed to submit application. Please try again.');
     } finally {
       setLoading(false);
     }

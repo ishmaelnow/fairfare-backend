@@ -1,0 +1,52 @@
+.ride-map-container {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.ride-map-placeholder {
+  background: #f3f4f6;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ride-map-placeholder-content {
+  text-align: center;
+  color: #6b7280;
+}
+
+.ride-map-placeholder-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.5;
+}
+
+.ride-map-popup {
+  text-align: center;
+}
+
+.ride-map-popup-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.ride-map-popup-title.pickup {
+  color: #10b981;
+}
+
+.ride-map-popup-title.dropoff {
+  color: #ef4444;
+}
+
+.ride-map-popup-title.driver {
+  color: #3b82f6;
+}
+
+.ride-map-popup-address {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+
