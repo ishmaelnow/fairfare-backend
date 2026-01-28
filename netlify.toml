@@ -1,0 +1,14 @@
+# Netlify configuration for rider-pwa
+# This file should be in the repo root
+# For rider-pwa site, set Base directory to "rider-pwa" in Netlify UI
+
+[build]
+  base = "rider-pwa"
+  publish = "rider-pwa/dist"
+  command = "npm install --legacy-peer-deps && npm run build"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
