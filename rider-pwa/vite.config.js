@@ -16,13 +16,6 @@ export default defineConfig({
         theme_color: '#2563eb',
         background_color: '#ffffff',
         display: 'standalone',
-        icons: [
-          {
-            src: 'vite.svg',
-            sizes: 'any',
-            type: 'image/svg+xml'
-          }
-        ],
         start_url: '/',
         scope: '/',
         orientation: 'portrait'
