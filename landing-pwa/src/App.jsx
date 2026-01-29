@@ -33,8 +33,8 @@ function App() {
           </div>
           <ul className="nav-menu">
             <li><a href="/" className="nav-link active">Home</a></li>
-            <li><a href="https://rider.fairfaretransportation.app" className="nav-link">Rider</a></li>
-            <li><a href="https://driver.fairfaretransportation.app" className="nav-link">Driver</a></li>
+            <li><a href={import.meta.env.VITE_RIDER_URL || 'https://rider.fairfaretransportation.app'} className="nav-link">Rider</a></li>
+            <li><a href={import.meta.env.VITE_DRIVER_URL || 'https://driver.fairfaretransportation.app'} className="nav-link">Driver</a></li>
             <li><a href="#about" className="nav-link">About</a></li>
             <li><a href="#contact" className="nav-link">Contact</a></li>
           </ul>
@@ -49,7 +49,7 @@ function App() {
 
         <div className="apps-grid">
           <a 
-            href="https://rider.fairfaretransportation.app" 
+            href={import.meta.env.VITE_RIDER_URL || 'https://rider.fairfaretransportation.app'} 
             className="app-card rider"
           >
             <div className="icon">🚗</div>
@@ -58,7 +58,7 @@ function App() {
           </a>
 
           <a 
-            href="https://driver.fairfaretransportation.app" 
+            href={import.meta.env.VITE_DRIVER_URL || 'https://driver.fairfaretransportation.app'} 
             className="app-card driver"
           >
             <div className="icon">🚙</div>
