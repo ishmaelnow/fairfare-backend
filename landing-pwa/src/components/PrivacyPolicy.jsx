@@ -1,114 +1,200 @@
-import './PrivacyPolicy.css'
+import { useEffect } from 'react';
+import './PrivacyPolicy.css';
 
 export function PrivacyPolicy() {
+  useEffect(() => {
+    // Set page title and meta tags
+    document.title = 'Privacy Policy | FairFare';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'FairFare Privacy Policy - Learn how we collect, use, and protect your personal information.');
+    } else {
+      const meta = document.createElement('meta');
+      meta.name = 'description';
+      meta.content = 'FairFare Privacy Policy - Learn how we collect, use, and protect your personal information.';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+    }
+  }, []);
+
   return (
     <div className="privacy-policy">
       <div className="privacy-container">
         <h1>Privacy Policy</h1>
-        
+        <p className="privacy-updated">
+          <strong>Last updated:</strong> {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
+
         <div className="privacy-content">
+          <p className="privacy-intro">
+            FairFare ("FairFare", "we", "us", or "our") is committed to protecting your privacy.
+            This Privacy Policy explains how your personal information is collected, used, and
+            disclosed by FairFare.
+          </p>
+
+          <p className="privacy-intro">
+            This Privacy Policy applies to the FairFare website and the FairFare mobile applications
+            (the "Service"), including:
+          </p>
+
+          <ul>
+            <li>iOS Driver App</li>
+            <li>iOS Customer App</li>
+            <li>Android Driver App</li>
+            <li>Android Customer App</li>
+          </ul>
+
+          <p className="privacy-intro">
+            By accessing or using our Service, you agree to the collection, storage, use, and disclosure
+            of your personal information as described in this Privacy Policy.
+          </p>
+
+          {/* Zero Tolerance Policy Section */}
+          <section className="zero-tolerance-section">
+            <h2>
+              🚗 Zero Tolerance Policy{' '}
+              <small className="zero-tolerance-citation">
+                (City of Dallas Ord. 29696; Sec. 47A-2.1.6 & 47A-2.1.7)
+              </small>
+            </h2>
+            <div className="zero-tolerance-alert">
+              <p>
+                FairFare Transportation maintains an <strong>operating authority zero-tolerance policy</strong> for intoxicating substances.
+                <strong> Drivers are strictly prohibited</strong> from using drugs or alcohol while providing transportation services
+                or immediately before operating a vehicle.
+              </p>
+              <p>
+                If you suspect your driver is under the influence of drugs or alcohol, <strong>end the trip immediately</strong>.
+                To report a complaint to the City of Dallas, dial <strong>3-1-1</strong> (or <strong>214-670-3111</strong> from outside Dallas)
+                pursuant to <strong>Ord. 29696</strong>. In an emergency, call <strong>911</strong>.
+              </p>
+              <p>
+                Any violation of this Zero Tolerance Policy will result in <strong>immediate suspension</strong> of the driver and an internal
+                investigation consistent with City of Dallas Transportation-for-Hire regulations.
+              </p>
+            </div>
+          </section>
+
           <section>
-            <h2>1. Introduction</h2>
+            <h2>Definitions</h2>
+            <div className="definitions-list">
+              <p>
+                <strong>Account</strong> means a unique account created to access the Service.
+              </p>
+              <p>
+                <strong>Personal Data</strong> means any information relating to an identifiable individual.
+              </p>
+              <p>
+                <strong>Usage Data</strong> refers to data collected automatically when using the Service.
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <h2>Information We Collect</h2>
+
+            <h3>Personal Data</h3>
+            <ul>
+              <li>Email address</li>
+              <li>First and last name</li>
+              <li>Phone number</li>
+              <li>Address, city, state, ZIP/postal code</li>
+            </ul>
+
+            <h3>Usage Data</h3>
             <p>
-              FairFare Transportation ("we," "our," or "us") is committed to protecting your privacy. 
-              This Privacy Policy explains how we collect, use, disclose, and safeguard your information 
-              when you use our rideshare platform.
+              Usage Data may include IP address, browser type, device identifiers, pages visited,
+              and diagnostic data.
             </p>
           </section>
 
           <section>
-            <h2>2. Information We Collect</h2>
-            <p>We collect information that you provide directly to us, including:</p>
+            <h2>Tracking Technologies</h2>
+            <p>
+              We use cookies, web beacons, and similar technologies to track activity on our Service
+              and improve functionality.
+            </p>
+          </section>
+
+          <section>
+            <h2>Use of Personal Data</h2>
             <ul>
-              <li>Personal identification information (name, email address, phone number)</li>
-              <li>Payment information (credit card details, billing address)</li>
-              <li>Location data when you use our services</li>
-              <li>Driver license and vehicle information (for drivers)</li>
-              <li>Communication data (messages, feedback, support requests)</li>
+              <li>To provide and maintain the Service</li>
+              <li>To manage user accounts</li>
+              <li>To perform contractual obligations</li>
+              <li>To communicate service-related updates</li>
+              <li>To comply with legal obligations</li>
             </ul>
           </section>
 
           <section>
-            <h2>3. How We Use Your Information</h2>
-            <p>We use the information we collect to:</p>
-            <ul>
-              <li>Provide, maintain, and improve our services</li>
-              <li>Process transactions and send related information</li>
-              <li>Match riders with drivers</li>
-              <li>Send you technical notices and support messages</li>
-              <li>Respond to your comments and questions</li>
-              <li>Monitor and analyze trends and usage</li>
-              <li>Detect, prevent, and address technical issues</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2>4. Information Sharing and Disclosure</h2>
-            <p>We may share your information in the following situations:</p>
-            <ul>
-              <li>With drivers/riders to facilitate ride matching</li>
-              <li>With service providers who assist us in operating our platform</li>
-              <li>When required by law or to protect our rights</li>
-              <li>In connection with a business transfer or merger</li>
-              <li>With your consent or at your direction</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2>5. Data Security</h2>
+            <h2>Third-Party Services</h2>
             <p>
-              We implement appropriate technical and organizational security measures to protect your 
-              personal information. However, no method of transmission over the Internet or electronic 
-              storage is 100% secure, and we cannot guarantee absolute security.
+              We may share data with trusted service providers such as hosting, dispatch, mapping,
+              and payment processors, solely to operate the Service.
             </p>
           </section>
 
           <section>
-            <h2>6. Your Rights</h2>
-            <p>You have the right to:</p>
-            <ul>
-              <li>Access and receive a copy of your personal data</li>
-              <li>Rectify inaccurate or incomplete data</li>
-              <li>Request deletion of your personal data</li>
-              <li>Object to processing of your personal data</li>
-              <li>Request restriction of processing</li>
-              <li>Data portability</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2>7. Cookies and Tracking Technologies</h2>
+            <h2>Data Retention</h2>
             <p>
-              We use cookies and similar tracking technologies to track activity on our platform and 
-              hold certain information. You can instruct your browser to refuse all cookies or to 
-              indicate when a cookie is being sent.
+              Personal Data is retained only as long as necessary to fulfill the purposes outlined
+              in this Privacy Policy and comply with legal requirements.
             </p>
           </section>
 
           <section>
-            <h2>8. Children's Privacy</h2>
+            <h2>Deletion of Personal Data</h2>
             <p>
-              Our services are not intended for individuals under the age of 18. We do not knowingly 
-              collect personal information from children under 18.
+              Users may request deletion or transfer of their personal data by contacting us.
+              Requests are handled within one month.
             </p>
           </section>
 
           <section>
-            <h2>9. Changes to This Privacy Policy</h2>
+            <h2>International Data Transfers</h2>
             <p>
-              We may update our Privacy Policy from time to time. We will notify you of any changes 
-              by posting the new Privacy Policy on this page and updating the "Last Updated" date.
+              Your information may be processed outside your jurisdiction. By using the Service,
+              you consent to such transfers.
             </p>
           </section>
 
           <section>
-            <h2>10. Contact Us</h2>
+            <h2>Disclosure of Personal Data</h2>
             <p>
-              If you have any questions about this Privacy Policy, please contact us at:
+              Personal Data may be disclosed to comply with legal obligations, protect rights,
+              or ensure user safety.
             </p>
+          </section>
+
+          <section>
+            <h2>Security</h2>
             <p>
-              Email: privacy@fairfaretransportation.app<br />
-              Address: [Your Company Address]
+              We implement commercially reasonable safeguards, but no method of transmission
+              or storage is 100% secure.
+            </p>
+          </section>
+
+          <section>
+            <h2>Links to Other Websites</h2>
+            <p>
+              We are not responsible for third-party websites linked from our Service.
+            </p>
+          </section>
+
+          <section>
+            <h2>Changes to This Policy</h2>
+            <p>
+              We may update this Privacy Policy periodically. Changes are effective when posted
+              on this page.
+            </p>
+          </section>
+
+          <section>
+            <h2>Contact Us</h2>
+            <p>
+              Email: <a href="mailto:support@fairfaretransportation.app" className="privacy-link">support@fairfaretransportation.app</a>
+              <br />
+              Website: <a href="https://fairfaretransportation.app" className="privacy-link" target="_blank" rel="noopener noreferrer">https://fairfaretransportation.app</a>
             </p>
           </section>
 
@@ -118,7 +204,5 @@ export function PrivacyPolicy() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-
