@@ -19,17 +19,26 @@ export async function signUp(email, password, role, fullName) {
   if (authError) throw authError;
   if (!authData.user) throw new Error('User creation failed');
 
+  // Create profile (RLS policy allows users to insert own profile)
+  // Use upsert to handle case where profile might already exist
   const { error: profileError } = await supabase
     .from('profiles')
-    .insert({
+    .upsert({
       id: authData.user.id,
       role: role,
       full_name: fullName || null,
+    }, {
+      onConflict: 'id'
     });
 
   if (profileError) {
-    console.error('Failed to create profile:', profileError);
-    throw new Error('Profile creation failed. Please try again.');
+    // If it's a duplicate key error, profile already exists - that's okay
+    if (profileError.code === '23505') {
+      console.log('Profile already exists, continuing...');
+    } else {
+      console.error('Failed to create profile:', profileError);
+      throw new Error('Profile creation failed. Please try again.');
+    }
   }
 
   return authData;
