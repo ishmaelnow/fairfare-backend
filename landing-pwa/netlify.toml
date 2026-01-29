@@ -1,5 +1,4 @@
 [build]
-  base = "landing-pwa"
   publish = "dist"
   command = "npm install && npm run build"
 
