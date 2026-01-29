@@ -15,7 +15,9 @@ function App() {
               <h2>FairFare</h2>
             </div>
             <ul className="nav-menu">
-              <li><button onClick={() => setShowPrivacyPolicy(false)} className="nav-link">Back to Home</button></li>
+              <li><button onClick={() => setShowPrivacyPolicy(false)} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Home</button></li>
+              <li><a href={import.meta.env.VITE_RIDER_URL || 'https://rider.fairfaretransportation.app'} className="nav-link">Rider</a></li>
+              <li><a href={import.meta.env.VITE_DRIVER_URL || 'https://driver.fairfaretransportation.app'} className="nav-link">Driver</a></li>
             </ul>
           </div>
         </nav>
@@ -37,6 +39,7 @@ function App() {
             <li><a href={import.meta.env.VITE_DRIVER_URL || 'https://driver.fairfaretransportation.app'} className="nav-link">Driver</a></li>
             <li><a href="#about" className="nav-link">About</a></li>
             <li><a href="#contact" className="nav-link">Contact</a></li>
+            <li><button onClick={() => setShowPrivacyPolicy(true)} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Privacy Policy</button></li>
           </ul>
         </div>
       </nav>
