@@ -155,6 +155,12 @@ const Dashboard = ({ onLogout }) => {
   const toggleAvailability = async () => {
     if (!profile) return;
 
+    // SECURITY: Prevent unapproved drivers from going online
+    if (!profile.is_active) {
+      alert('Your driver account is pending admin approval. You cannot go online until approved.');
+      return;
+    }
+
     setUpdatingAvailability(true);
     try {
       const newAvailability = !profile.is_available;
@@ -233,6 +239,12 @@ const Dashboard = ({ onLogout }) => {
   const handleAcceptRide = async (rideId) => {
     if (!profile) {
       alert('Driver profile not loaded. Please refresh the page.');
+      return;
+    }
+
+    // SECURITY: Prevent unapproved drivers from accepting rides
+    if (!profile.is_active) {
+      alert('Your driver account is pending admin approval. You cannot accept rides until approved.');
       return;
     }
 
@@ -326,10 +338,13 @@ const Dashboard = ({ onLogout }) => {
               <Button
                 onClick={toggleAvailability}
                 variant={profile.is_available ? 'danger' : 'primary'}
-                disabled={updatingAvailability}
+                disabled={updatingAvailability || !profile.is_active}
+                title={!profile.is_active ? 'Pending admin approval' : ''}
               >
                 {updatingAvailability
                   ? 'Updating...'
+                  : !profile.is_active
+                  ? '⏳ Pending Approval'
                   : profile.is_available
                   ? '🟢 Go Offline'
                   : '⚫ Go Online'}
@@ -365,9 +380,26 @@ const Dashboard = ({ onLogout }) => {
                 <div className="vehicle-plate">Plate: {profile.vehicle_plate}</div>
               </div>
             )}
+
+            {!profile.is_active && (
+              <div className="approval-notice" style={{ 
+                marginTop: '20px', 
+                padding: '15px', 
+                backgroundColor: '#fff3cd', 
+                border: '1px solid #ffc107',
+                borderRadius: '8px',
+                color: '#856404'
+              }}>
+                <strong>⏳ Account Pending Approval</strong>
+                <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>
+                  Your driver application is being reviewed by an administrator. 
+                  You will be notified once your account is approved.
+                </p>
+              </div>
+            )}
           </Card>
 
-          {profile.is_available ? (
+          {profile.is_active && profile.is_available ? (
             <Card className="driver-dashboard-card">
               <h2 className="section-title">Available Rides</h2>
               {availableRides.length === 0 ? (

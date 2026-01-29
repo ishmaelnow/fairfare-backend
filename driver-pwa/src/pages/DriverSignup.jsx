@@ -56,6 +56,7 @@ const DriverSignup = () => {
       }
 
       // Create driver profile in Supabase
+      // IMPORTANT: is_active must be false - requires admin approval
       const { error: insertError } = await supabase
         .from('driver_profiles')
         .insert({
@@ -67,15 +68,15 @@ const DriverSignup = () => {
           vehicle_plate: formData.licensePlate,
           license_number: '', // Will be filled later if needed
           is_available: false,
-          is_active: true,
+          is_active: false, // REQUIRES ADMIN APPROVAL - Security fix
         });
 
       if (insertError) {
         throw insertError;
       }
 
-      setSuccess('Driver profile created successfully! Redirecting to dashboard...');
-      setTimeout(() => navigate('/dashboard'), 2000);
+      setSuccess('Driver application submitted successfully! Waiting for admin approval. You will be notified once approved.');
+      setTimeout(() => navigate('/dashboard'), 3000);
     } catch (err) {
       console.error('Driver signup error:', err);
       setError(err.message || 'Failed to submit application. Please try again.');
