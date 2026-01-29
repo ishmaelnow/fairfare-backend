@@ -1,14 +1,11 @@
-# Netlify configuration for rider-pwa
-# This file should be in the repo root
-# For rider-pwa site, set Base directory to "rider-pwa" in Netlify UI
-
-[build]
-  base = "rider-pwa"
-  publish = "rider-pwa/dist"
-  command = "npm install --legacy-peer-deps && npm run build"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+# Netlify configuration files are in each PWA directory:
+# - rider-pwa/netlify.toml
+# - driver-pwa/netlify.toml  
+# - admin-pwa/netlify.toml
+# 
+# Each Netlify site should have Base directory set to its respective PWA folder
+# and will read its own netlify.toml file
+# 
+# This root netlify.toml is kept for reference but should not override
+# individual PWA configurations
 
