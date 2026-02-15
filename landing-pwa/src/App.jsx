@@ -1,10 +1,47 @@
+// App.jsx (complete replacement) — only necessary fixes:
+// 1) Sanitize VITE_* URLs so bad env values can't override your correct fallbacks
+// 2) Optional: open external subdomain apps in a new tab safely (target+rel)
+
 import { useState } from 'react'
 import './App.css'
 import { PrivacyPolicy } from './components/PrivacyPolicy'
 import { Home } from './components/Home'
 
+// ✅ Minimal URL sanitizer:
+// - If env var is missing or invalid, use the fallback
+// - Accepts full http/https URLs only
+function safeExternalUrl(envValue, fallback) {
+  const v = (envValue ?? '').trim()
+  if (!v) return fallback
+
+  // Must be http/https
+  if (!/^https?:\/\//i.test(v)) return fallback
+
+  try {
+    // Valid URL syntax check
+    new URL(v)
+    return v
+  } catch {
+    return fallback
+  }
+}
+
 function App() {
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false)
+
+  // ✅ Centralize URLs so every link uses the same, validated value
+  const riderUrl = safeExternalUrl(
+    import.meta.env.VITE_RIDER_URL,
+    'https://rider.fairfaretransportation.app'
+  )
+
+  const driverUrl = safeExternalUrl(
+    import.meta.env.VITE_DRIVER_URL,
+    'https://driver.fairfaretransportation.app'
+  )
+
+  // Optional: treat these as "external apps" so they open cleanly without messing with SPA state
+  const externalLinkProps = { target: '_blank', rel: 'noopener noreferrer' }
 
   if (showPrivacyPolicy) {
     return (
@@ -15,12 +52,31 @@ function App() {
               <h2>FairFare</h2>
             </div>
             <ul className="nav-menu">
-              <li><button onClick={() => setShowPrivacyPolicy(false)} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Home</button></li>
-              <li><a href={import.meta.env.VITE_RIDER_URL || 'https://rider.fairfaretransportation.app'} className="nav-link">Rider</a></li>
-              <li><a href={import.meta.env.VITE_DRIVER_URL || 'https://driver.fairfaretransportation.app'} className="nav-link">Driver</a></li>
+              <li>
+                <button
+                  onClick={() => setShowPrivacyPolicy(false)}
+                  className="nav-link"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  Home
+                </button>
+              </li>
+
+              <li>
+                <a href={riderUrl} className="nav-link" {...externalLinkProps}>
+                  Rider
+                </a>
+              </li>
+
+              <li>
+                <a href={driverUrl} className="nav-link" {...externalLinkProps}>
+                  Driver
+                </a>
+              </li>
             </ul>
           </div>
         </nav>
+
         <PrivacyPolicy />
       </div>
     )
@@ -33,13 +89,47 @@ function App() {
           <div className="nav-logo">
             <h2>FairFare</h2>
           </div>
+
           <ul className="nav-menu">
-            <li><a href="/" className="nav-link active">Home</a></li>
-            <li><a href={import.meta.env.VITE_RIDER_URL || 'https://rider.fairfaretransportation.app'} className="nav-link">Rider</a></li>
-            <li><a href={import.meta.env.VITE_DRIVER_URL || 'https://driver.fairfaretransportation.app'} className="nav-link">Driver</a></li>
-            <li><a href="#about" className="nav-link">About</a></li>
-            <li><a href="#contact" className="nav-link">Contact</a></li>
-            <li><button onClick={() => setShowPrivacyPolicy(true)} className="nav-link" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Privacy Policy</button></li>
+            <li>
+              <a href="/" className="nav-link active">
+                Home
+              </a>
+            </li>
+
+            <li>
+              <a href={riderUrl} className="nav-link" {...externalLinkProps}>
+                Rider
+              </a>
+            </li>
+
+            <li>
+              <a href={driverUrl} className="nav-link" {...externalLinkProps}>
+                Driver
+              </a>
+            </li>
+
+            <li>
+              <a href="#about" className="nav-link">
+                About
+              </a>
+            </li>
+
+            <li>
+              <a href="#contact" className="nav-link">
+                Contact
+              </a>
+            </li>
+
+            <li>
+              <button
+                onClick={() => setShowPrivacyPolicy(true)}
+                className="nav-link"
+                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                Privacy Policy
+              </button>
+            </li>
           </ul>
         </div>
       </nav>
@@ -51,19 +141,13 @@ function App() {
         </header>
 
         <div className="apps-grid">
-          <a 
-            href={import.meta.env.VITE_RIDER_URL || 'https://rider.fairfaretransportation.app'} 
-            className="app-card rider"
-          >
+          <a href={riderUrl} className="app-card rider" {...externalLinkProps}>
             <div className="icon">🚗</div>
             <h2>Rider</h2>
             <p>Book rides and track your driver in real-time</p>
           </a>
 
-          <a 
-            href={import.meta.env.VITE_DRIVER_URL || 'https://driver.fairfaretransportation.app'} 
-            className="app-card driver"
-          >
+          <a href={driverUrl} className="app-card driver" {...externalLinkProps}>
             <div className="icon">🚙</div>
             <h2>Driver</h2>
             <p>Accept rides and manage your trips</p>
@@ -81,8 +165,8 @@ function App() {
         <div className="container">
           <h2>About FairFare</h2>
           <p className="section-text">
-            FairFare Transportation is a comprehensive ride-sharing platform designed to connect riders 
-            with reliable drivers. We provide a seamless experience for booking rides, managing trips, 
+            FairFare Transportation is a comprehensive ride-sharing platform designed to connect riders
+            with reliable drivers. We provide a seamless experience for booking rides, managing trips,
             and ensuring safe transportation for everyone.
           </p>
           <div className="features">
@@ -109,9 +193,8 @@ function App() {
       <section id="contact" className="section contact-section">
         <div className="container">
           <h2>Contact Us</h2>
-          <p className="section-text">
-            Have questions or need support? We're here to help!
-          </p>
+          <p className="section-text">Have questions or need support? We're here to help!</p>
+
           <div className="contact-info">
             <div className="contact-item">
               <div className="contact-icon">📧</div>
@@ -120,6 +203,7 @@ function App() {
                 support@fairfaretransportation.app
               </a>
             </div>
+
             <div className="contact-item">
               <div className="contact-icon">📞</div>
               <h3>Phone</h3>
@@ -127,6 +211,7 @@ function App() {
                 (469) 268-8239
               </a>
             </div>
+
             <div className="contact-item">
               <div className="contact-icon">📞</div>
               <h3>Phone</h3>
@@ -142,7 +227,7 @@ function App() {
         <div className="container">
           <p>© {new Date().getFullYear()} FairFare Transportation. All rights reserved.</p>
           <p style={{ marginTop: '15px' }}>
-            <button 
+            <button
               onClick={() => setShowPrivacyPolicy(true)}
               style={{
                 background: 'none',
@@ -150,7 +235,7 @@ function App() {
                 color: '#ccc',
                 textDecoration: 'underline',
                 cursor: 'pointer',
-                fontSize: '0.9rem'
+                fontSize: '0.9rem',
               }}
             >
               Privacy Policy
@@ -163,4 +248,3 @@ function App() {
 }
 
 export default App
-
