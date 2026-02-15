@@ -122,4 +122,56 @@
   }
 }
 
+/* Fleet section (matches the project’s existing CSS approach) */
+.fleet-section {
+  padding-top: 40px;
+  border-top: 1px solid #e5e7eb; /* light gray */
+}
+
+.fleet-subtitle {
+  margin-top: -6px;
+  margin-bottom: 18px;
+  color: #6b7280; /* gray-500 */
+  font-size: 0.95rem;
+}
+
+.fleet-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  padding: 18px;
+}
+
+.fleet-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr; /* mobile */
+}
+
+@media (min-width: 640px) {
+  .fleet-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .fleet-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.fleet-img-wrap {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.fleet-img {
+  width: 100%;
+  height: 176px; /* Tailwind h-44 equivalent */
+  object-fit: cover;
+  display: block;
+}
+
+
 

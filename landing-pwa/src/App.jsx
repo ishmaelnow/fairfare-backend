@@ -1,24 +1,18 @@
-// App.jsx (complete replacement) — only necessary fixes:
+// App.jsx (clean replacement) — only necessary fixes:
 // 1) Sanitize VITE_* URLs so bad env values can't override your correct fallbacks
-// 2) Optional: open external subdomain apps in a new tab safely (target+rel)
+// 2) Keep Fleet as a normal page section (NOT inside navbar)
 
 import { useState } from 'react'
 import './App.css'
 import { PrivacyPolicy } from './components/PrivacyPolicy'
 import { Home } from './components/Home'
 
-// ✅ Minimal URL sanitizer:
-// - If env var is missing or invalid, use the fallback
-// - Accepts full http/https URLs only
+
 function safeExternalUrl(envValue, fallback) {
   const v = (envValue ?? '').trim()
   if (!v) return fallback
-
-  // Must be http/https
   if (!/^https?:\/\//i.test(v)) return fallback
-
   try {
-    // Valid URL syntax check
     new URL(v)
     return v
   } catch {
@@ -29,7 +23,6 @@ function safeExternalUrl(envValue, fallback) {
 function App() {
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false)
 
-  // ✅ Centralize URLs so every link uses the same, validated value
   const riderUrl = safeExternalUrl(
     import.meta.env.VITE_RIDER_URL,
     'https://rider.fairfaretransportation.app'
@@ -40,7 +33,6 @@ function App() {
     'https://driver.fairfaretransportation.app'
   )
 
-  // Optional: treat these as "external apps" so they open cleanly without messing with SPA state
   const externalLinkProps = { target: '_blank', rel: 'noopener noreferrer' }
 
   if (showPrivacyPolicy) {
@@ -61,13 +53,11 @@ function App() {
                   Home
                 </button>
               </li>
-
               <li>
                 <a href={riderUrl} className="nav-link" {...externalLinkProps}>
                   Rider
                 </a>
               </li>
-
               <li>
                 <a href={driverUrl} className="nav-link" {...externalLinkProps}>
                   Driver
@@ -84,6 +74,7 @@ function App() {
 
   return (
     <div className="app">
+      {/* Navbar */}
       <nav className="navbar">
         <div className="nav-container">
           <div className="nav-logo">
@@ -91,36 +82,12 @@ function App() {
           </div>
 
           <ul className="nav-menu">
-            <li>
-              <a href="/" className="nav-link active">
-                Home
-              </a>
-            </li>
-
-            <li>
-              <a href={riderUrl} className="nav-link" {...externalLinkProps}>
-                Rider
-              </a>
-            </li>
-
-            <li>
-              <a href={driverUrl} className="nav-link" {...externalLinkProps}>
-                Driver
-              </a>
-            </li>
-
-            <li>
-              <a href="#about" className="nav-link">
-                About
-              </a>
-            </li>
-
-            <li>
-              <a href="#contact" className="nav-link">
-                Contact
-              </a>
-            </li>
-
+            <li><a href="/" className="nav-link active">Home</a></li>
+            <li><a href={riderUrl} className="nav-link" {...externalLinkProps}>Rider</a></li>
+            <li><a href={driverUrl} className="nav-link" {...externalLinkProps}>Driver</a></li>
+            <li><a href="#fleet" className="nav-link">Fleet</a></li>
+            <li><a href="#about" className="nav-link">About</a></li>
+            <li><a href="#contact" className="nav-link">Contact</a></li>
             <li>
               <button
                 onClick={() => setShowPrivacyPolicy(true)}
@@ -134,6 +101,7 @@ function App() {
         </div>
       </nav>
 
+      {/* Hero + App cards */}
       <div className="container">
         <header>
           <h1>FairFare Transportation</h1>
@@ -154,8 +122,7 @@ function App() {
           </a>
         </div>
       </div>
-
-      {/* Home Content - Features and Rates */}
+      {/* Home Content */}
       <div className="container home-container">
         <Home />
       </div>
@@ -207,17 +174,13 @@ function App() {
             <div className="contact-item">
               <div className="contact-icon">📞</div>
               <h3>Phone</h3>
-              <a href="tel:4692688239" className="contact-link">
-                (469) 268-8239
-              </a>
+              <a href="tel:4692688239" className="contact-link">(469) 268-8239</a>
             </div>
 
             <div className="contact-item">
               <div className="contact-icon">📞</div>
               <h3>Phone</h3>
-              <a href="tel:4698357520" className="contact-link">
-                (469) 835-7520
-              </a>
+              <a href="tel:4698357520" className="contact-link">(469) 835-7520</a>
             </div>
           </div>
         </div>

@@ -4,10 +4,9 @@ export function Home() {
   const features = [
     { title: "Quick and Easy Booking", description: "Book your ride in just a few clicks." },
     { title: "Affordable Pricing", description: "Get the best rates for your journeys." },
-    { title: "Safe and Reliable", description: "All our drivers are verified and professional." },
     { title: "24/7 Service", description: "Available anytime you need a ride in the Dallas/Fort Worth area." },
     { title: "Wheelchair Accessible", description: "Wheelchair-accessible vehicles are available upon request." },
-  ];
+  ]
 
   const taxiRates = [
     { category: "Initial Meter Drop", price: "$3.00" },
@@ -21,10 +20,38 @@ export function Home() {
     { category: "DFW Airport Exit Fee", price: "$5.00" },
     { category: "DFW Airport Drop-off Fee", price: "$4.00" },
     { category: "Minimum Fare (DFW Airport to Off-Airport)", price: "$27.00" },
-  ];
+  ]
 
   return (
     <div className="home-content">
+      {/* ✅ Fleet Section (CSS-based, matches your project) */}
+      <section id="fleet" className="home-section fleet-section">
+        <h2>Our Vehicles</h2>
+        <p className="fleet-subtitle">
+          A quick look at the fleet available on FairFare.
+        </p>
+
+        <div className="fleet-card">
+          <div className="fleet-grid">
+            <div className="fleet-img-wrap">
+              <img src="/images/left-image.png" alt="Vehicle - Left" className="fleet-img" loading="lazy" />
+            </div>
+
+            <div className="fleet-img-wrap">
+              <img src="/images/pavan.png" alt="Vehicle - Pavan" className="fleet-img" loading="lazy" />
+            </div>
+
+            <div className="fleet-img-wrap">
+              <img src="/images/van.png" alt="Vehicle - Van" className="fleet-img" loading="lazy" />
+            </div>
+
+            <div className="fleet-img-wrap">
+              <img src="/images/right-image.png" alt="Vehicle - Right" className="fleet-img" loading="lazy" />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="home-section">
         <h2>Why Choose FairFare Transportation?</h2>
@@ -63,5 +90,3 @@ export function Home() {
     </div>
   )
 }
-
-
