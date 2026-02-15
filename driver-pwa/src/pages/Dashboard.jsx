@@ -6,7 +6,6 @@ import { formatCurrency } from '../lib/fare';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { RideMap } from '../components/RideMap';
-import Navbar from '../components/Navbar';
 import './Dashboard.css';
 
 const Dashboard = ({ onLogout }) => {
@@ -294,7 +293,7 @@ const Dashboard = ({ onLogout }) => {
   if (loading) {
     return (
       <>
-        <Navbar />
+        <></>
         <div className="driver-dashboard-page">
           <div className="driver-dashboard-loading">
             <div className="spinner"></div>
@@ -324,7 +323,7 @@ const Dashboard = ({ onLogout }) => {
 
   return (
     <>
-      <Navbar />
+      <></>
       <div className="driver-dashboard-page">
         <div className="driver-dashboard-container">
           <Card className="driver-dashboard-card">
