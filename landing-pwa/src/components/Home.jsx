@@ -22,9 +22,11 @@ export function Home() {
     { category: "Minimum Fare (DFW Airport to Off-Airport)", price: "$27.00" },
   ]
 
+  const base = import.meta.env.BASE_URL
+
   return (
     <div className="home-content">
-      {/* ✅ Fleet Section (CSS-based, matches your project) */}
+      {/* Fleet Section */}
       <section id="fleet" className="home-section fleet-section">
         <h2>Our Vehicles</h2>
         <p className="fleet-subtitle">
@@ -34,19 +36,39 @@ export function Home() {
         <div className="fleet-card">
           <div className="fleet-grid">
             <div className="fleet-img-wrap">
-              <img src="/images/left-image.png" alt="Vehicle - Left" className="fleet-img" loading="lazy" />
+              <img
+                src={`${base}images/left-image.png`}
+                alt="Vehicle - Left"
+                className="fleet-img"
+                loading="lazy"
+              />
             </div>
 
             <div className="fleet-img-wrap">
-              <img src="/images/pavan.png" alt="Vehicle - Pavan" className="fleet-img" loading="lazy" />
+              <img
+                src={`${base}images/pavan.png`}
+                alt="Vehicle - Pavan"
+                className="fleet-img"
+                loading="lazy"
+              />
             </div>
 
             <div className="fleet-img-wrap">
-              <img src="/images/van.png" alt="Vehicle - Van" className="fleet-img" loading="lazy" />
+              <img
+                src={`${base}images/van.png`}
+                alt="Vehicle - Van"
+                className="fleet-img"
+                loading="lazy"
+              />
             </div>
 
             <div className="fleet-img-wrap">
-              <img src="/images/right-image.png" alt="Vehicle - Right" className="fleet-img" loading="lazy" />
+              <img
+                src={`${base}images/right-image.png`}
+                alt="Vehicle - Right"
+                className="fleet-img"
+                loading="lazy"
+              />
             </div>
           </div>
         </div>
