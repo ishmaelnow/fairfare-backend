@@ -318,7 +318,7 @@ export default function ActiveRide() {
 
   return (
     <>
-      <Navbar />
+      <></>
       <div className="active-ride-page">
         <div className="active-ride-container">
           <Card className="active-ride-status-card">
