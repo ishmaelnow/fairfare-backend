@@ -223,7 +223,7 @@ const BookRide = ({ onLogout }) => {
 
   return (
     <>
-      <Navbar />
+      <></>
       <div className="book-ride-page">
         <div className="book-ride-container">
           <Card className="book-ride-card">
