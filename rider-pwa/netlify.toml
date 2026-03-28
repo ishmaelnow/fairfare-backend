@@ -2,6 +2,21 @@
   publish = "dist"
   command = "npm install --legacy-peer-deps && npm run build"
 
+[functions]
+  directory = "netlify/functions"
+
+[dev]
+  command = "npm run dev"
+  port = 8888
+  targetPort = 5173
+  framework = "vite"
+
+[[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

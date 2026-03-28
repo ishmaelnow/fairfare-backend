@@ -1,12 +1,15 @@
 import { supabase } from './supabase';
 
+const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
+
 export async function signUp(email, password, role, fullName) {
+  const safeEmail = normalizeEmail(email);
   if (role === 'admin') {
     throw new Error('Admin accounts cannot be created through signup. Please contact support.');
   }
 
   const { data: authData, error: authError } = await supabase.auth.signUp({
-    email,
+    email: safeEmail,
     password,
     options: {
       data: {
@@ -45,8 +48,9 @@ export async function signUp(email, password, role, fullName) {
 }
 
 export async function signIn(email, password) {
+  const safeEmail = normalizeEmail(email);
   const { data, error } = await supabase.auth.signInWithPassword({
-    email,
+    email: safeEmail,
     password,
   });
 

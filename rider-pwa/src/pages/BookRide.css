@@ -1,12 +1,49 @@
+/* Map-style background: OSM tile + soft overlay (attribution in BookRide.jsx) */
 .book-ride-page {
-  min-height: 100vh;
+  flex: 1;
+  min-height: calc(100vh - 72px);
   padding: 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  background-color: #aad3df;
+  background-image:
+    linear-gradient(to bottom, rgba(248, 250, 252, 0.82), rgba(226, 232, 240, 0.78)),
+    url('https://tile.openstreetmap.org/6/10/15.png');
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-attachment: scroll, fixed;
+}
+
+.book-ride-page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: 0.35;
 }
 
 .book-ride-container {
   max-width: 600px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.book-ride-map-attribution {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  font-size: 0.65rem;
+  color: rgba(55, 65, 81, 0.85);
+  margin-top: 0.75rem;
+}
+
+.book-ride-map-attribution a {
+  color: #1d4ed8;
 }
 
 .book-ride-card {
@@ -138,6 +175,7 @@
   border: 1px solid #bfdbfe;
   border-radius: 8px;
   padding: 1rem;
+  position: relative;
   margin-top: 0.5rem;
 }
 
@@ -167,3 +205,5 @@
   font-weight: 700;
   color: #2563eb;
 }
+
+

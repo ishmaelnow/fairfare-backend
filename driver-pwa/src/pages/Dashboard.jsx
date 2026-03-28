@@ -1,3 +1,8 @@
+// src/pages/Dashboard.jsx (complete replacement)
+// Adds: driver alert sound + optional browser notification when a new ride is inserted.
+// IMPORTANT: Browsers require a user gesture to allow audio.
+// So we show an "Enable Alerts" button that the driver clicks once.
+
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,23 +16,44 @@ import './Dashboard.css';
 const Dashboard = ({ onLogout }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
   const [profile, setProfile] = useState(null);
   const [availableRides, setAvailableRides] = useState([]);
   const [activeRide, setActiveRide] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updatingAvailability, setUpdatingAvailability] = useState(false);
+
+  // ✅ Alerts
+  const [alertsEnabled, setAlertsEnabled] = useState(false);
+  const audioCtxRef = useRef(null);
+  const alertsEnabledRef = useRef(false);
+
+  // Supabase realtime channel
   const channelRef = useRef(null);
+
+  // Avoid stale closures inside realtime callbacks
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    alertsEnabledRef.current = alertsEnabled;
+  }, [alertsEnabled]);
+
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
 
   useEffect(() => {
     if (user) {
       loadProfile();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   useEffect(() => {
     if (!profile) return;
 
     checkActiveRide();
+
     if (profile.is_available) {
       loadAvailableRides();
       subscribeToNewRides();
@@ -37,10 +63,88 @@ const Dashboard = ({ onLogout }) => {
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile]);
 
+  // -----------------------------
+  // ✅ Alerts helpers
+  // -----------------------------
+  const enableAlerts = async () => {
+    try {
+      // Must be triggered by a click for audio to work on most browsers
+      if (!audioCtxRef.current) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) {
+          alert('Audio alerts are not supported on this browser/device.');
+          console.warn('Web Audio API not supported');
+          console.log('User agent:', navigator.userAgent);
+          return;
+        }
+        audioCtxRef.current = new Ctx();
+      }
+
+      if (audioCtxRef.current.state === 'suspended') {
+        await audioCtxRef.current.resume();
+      }
+
+      // Optional: ask for notification permission (desktop works best; mobile varies)
+      if ('Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+
+      setAlertsEnabled(true);
+    } catch (e) {
+      console.error('Enable alerts failed:', e);
+      alert('Could not enable alerts. Please try again.');
+    }
+  };
+
+  const playRing = () => {
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+
+    const ringOnce = (startTime) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, startTime); // "ring" tone
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.25, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.35);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(startTime);
+      osc.stop(startTime + 0.4);
+    };
+
+    const now = ctx.currentTime;
+    ringOnce(now);
+    ringOnce(now + 0.55); // ring twice
+  };
+
+  const notifyNewRide = () => {
+    // Sound (requires Enable Alerts button click once)
+    playRing();
+
+    // Optional desktop notification
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification('New ride request', { body: 'A new ride is available.' });
+      } catch {
+        // Some browsers may throw; ignore silently
+      }
+    }
+  };
+
+  // -----------------------------
+  // Existing logic
+  // -----------------------------
   const loadProfile = async () => {
     if (!user) return;
 
@@ -89,44 +193,59 @@ const Dashboard = ({ onLogout }) => {
       query = query.or(`vehicle_type.is.null,vehicle_type.eq.${profile.vehicle_type}`);
     }
 
-    const { data } = await query
-      .order('requested_at', { ascending: true })
-      .limit(20);
+    const { data } = await query.order('requested_at', { ascending: true }).limit(20);
 
     const now = new Date();
-    const availableRides = (data || []).filter((ride) => {
-      if (ride.scheduled_at) {
-        const scheduledTime = new Date(ride.scheduled_at);
-        return scheduledTime <= now;
-      }
-      return true;
-    }).slice(0, 5);
+    const filtered = (data || [])
+      .filter((ride) => {
+        if (ride.scheduled_at) {
+          const scheduledTime = new Date(ride.scheduled_at);
+          return scheduledTime <= now;
+        }
+        return true;
+      })
+      .slice(0, 5);
 
-    setAvailableRides(availableRides);
+    setAvailableRides(filtered);
   };
 
   const subscribeToNewRides = () => {
+    // Prevent double subscriptions
+    if (channelRef.current) return;
+
     const channel = supabase
       .channel('available-rides')
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'rides',
-        },
+        { event: 'INSERT', schema: 'public', table: 'rides' },
         (payload) => {
           const newRide = payload.new;
-          if ((newRide.status === 'matching' || newRide.status === 'requested') && !newRide.driver_id) {
-            if (!profile) return;
-            
+
+          // Only show unassigned matching/requested rides
+          if (
+            (newRide.status === 'matching' || newRide.status === 'requested') &&
+            !newRide.driver_id
+          ) {
+            const p = profileRef.current;
+            if (!p) return;
+
+            // Skip future scheduled rides
             if (newRide.scheduled_at) {
               const scheduledTime = new Date(newRide.scheduled_at);
               const now = new Date();
               if (scheduledTime > now) return;
             }
-            
-            if (!newRide.vehicle_type || !profile.vehicle_type || newRide.vehicle_type === profile.vehicle_type) {
+
+            // Vehicle type filter
+            const matchesVehicle =
+              !newRide.vehicle_type || !p.vehicle_type || newRide.vehicle_type === p.vehicle_type;
+
+            if (matchesVehicle) {
+              // ✅ Trigger alert ONLY if user enabled alerts
+              if (alertsEnabledRef.current) {
+                notifyNewRide();
+              }
+
               setAvailableRides((prev) => [newRide, ...prev].slice(0, 5));
             }
           }
@@ -134,14 +253,15 @@ const Dashboard = ({ onLogout }) => {
       )
       .on(
         'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'rides',
-        },
+        { event: 'UPDATE', schema: 'public', table: 'rides' },
         (payload) => {
           const updatedRide = payload.new;
-          if (updatedRide.status !== 'matching' && updatedRide.status !== 'requested' || updatedRide.driver_id) {
+
+          // Remove rides that are no longer available
+          if (
+            (updatedRide.status !== 'matching' && updatedRide.status !== 'requested') ||
+            updatedRide.driver_id
+          ) {
             setAvailableRides((prev) => prev.filter((r) => r.id !== updatedRide.id));
           }
         }
@@ -163,6 +283,7 @@ const Dashboard = ({ onLogout }) => {
     setUpdatingAvailability(true);
     try {
       const newAvailability = !profile.is_available;
+
       const { error } = await supabase
         .from('driver_profiles')
         .update({
@@ -292,70 +413,70 @@ const Dashboard = ({ onLogout }) => {
 
   if (loading) {
     return (
-      <>
-        <></>
-        <div className="driver-dashboard-page">
-          <div className="driver-dashboard-loading">
-            <div className="spinner"></div>
-            <p>Loading dashboard...</p>
-          </div>
+      <div className="driver-dashboard-page">
+        <div className="driver-dashboard-loading">
+          <div className="spinner"></div>
+          <p>Loading dashboard...</p>
         </div>
-      </>
+      </div>
     );
   }
 
   if (!profile) {
     return (
-      <>
-        <Navbar />
-        <div className="driver-dashboard-page">
-          <Card className="driver-dashboard-card">
-            <h2>Driver Profile Not Found</h2>
-            <p>You need to complete driver registration first.</p>
-            <Button onClick={() => navigate('/driver-signup')} variant="primary">
-              Complete Registration
-            </Button>
-          </Card>
-        </div>
-      </>
+      <div className="driver-dashboard-page">
+        <Card className="driver-dashboard-card">
+          <h2>Driver Profile Not Found</h2>
+          <p>You need to complete driver registration first.</p>
+          <Button onClick={() => navigate('/driver-signup')} variant="primary">
+            Complete Registration
+          </Button>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <>
-      <></>
-      <div className="driver-dashboard-page">
+    <div className="driver-dashboard-page">
         <div className="driver-dashboard-container">
           <Card className="driver-dashboard-card">
             <div className="driver-dashboard-header">
               <div>
                 <h1 className="driver-dashboard-title">Driver Dashboard</h1>
-                <p className="driver-dashboard-subtitle">
-                  {user?.full_name || 'Driver'}
-                </p>
+                <p className="driver-dashboard-subtitle">{user?.full_name || 'Driver'}</p>
               </div>
-              <Button
-                onClick={toggleAvailability}
-                variant={profile.is_available ? 'danger' : 'primary'}
-                disabled={updatingAvailability || !profile.is_active}
-                title={!profile.is_active ? 'Pending admin approval' : ''}
-              >
-                {updatingAvailability
-                  ? 'Updating...'
-                  : !profile.is_active
-                  ? '⏳ Pending Approval'
-                  : profile.is_available
-                  ? '🟢 Go Offline'
-                  : '⚫ Go Online'}
-              </Button>
+
+              {/* ✅ Alerts button + existing availability button */}
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <Button
+                  onClick={enableAlerts}
+                  variant="primary"
+                  title="Click once to allow alert sounds on this device/browser"
+                >
+                  {alertsEnabled ? '🔔 Alerts Enabled' : '🔕 Enable Alerts'}
+                </Button>
+
+                <Button
+                  onClick={toggleAvailability}
+                  variant={profile.is_available ? 'danger' : 'primary'}
+                  disabled={updatingAvailability || !profile.is_active}
+                  title={!profile.is_active ? 'Pending admin approval' : ''}
+                >
+                  {updatingAvailability
+                    ? 'Updating...'
+                    : !profile.is_active
+                    ? '⏳ Pending Approval'
+                    : profile.is_available
+                    ? '🟢 Go Offline'
+                    : '⚫ Go Online'}
+                </Button>
+              </div>
             </div>
 
             <div className="driver-stats">
               <div className="driver-stat">
                 <div className="stat-label">Rating</div>
-                <div className="stat-value">
-                  ⭐ {(profile.rating_avg || 0).toFixed(1)}
-                </div>
+                <div className="stat-value">⭐ {(profile.rating_avg || 0).toFixed(1)}</div>
               </div>
               <div className="driver-stat">
                 <div className="stat-label">Total Trips</div>
@@ -381,18 +502,21 @@ const Dashboard = ({ onLogout }) => {
             )}
 
             {!profile.is_active && (
-              <div className="approval-notice" style={{ 
-                marginTop: '20px', 
-                padding: '15px', 
-                backgroundColor: '#fff3cd', 
-                border: '1px solid #ffc107',
-                borderRadius: '8px',
-                color: '#856404'
-              }}>
+              <div
+                className="approval-notice"
+                style={{
+                  marginTop: '20px',
+                  padding: '15px',
+                  backgroundColor: '#fff3cd',
+                  border: '1px solid #ffc107',
+                  borderRadius: '8px',
+                  color: '#856404',
+                }}
+              >
                 <strong>⏳ Account Pending Approval</strong>
                 <p style={{ margin: '8px 0 0 0', fontSize: '14px' }}>
-                  Your driver application is being reviewed by an administrator. 
-                  You will be notified once your account is approved.
+                  Your driver application is being reviewed by an administrator. You will be notified once
+                  your account is approved.
                 </p>
               </div>
             )}
@@ -401,6 +525,7 @@ const Dashboard = ({ onLogout }) => {
           {profile.is_active && profile.is_available ? (
             <Card className="driver-dashboard-card">
               <h2 className="section-title">Available Rides</h2>
+
               {availableRides.length === 0 ? (
                 <div className="no-rides">
                   <p>No rides available at the moment.</p>
@@ -413,15 +538,9 @@ const Dashboard = ({ onLogout }) => {
                       <div className="ride-card-header">
                         <div>
                           <h3 className="ride-id">Ride #{ride.id.slice(0, 8)}</h3>
-                          <div className="ride-fare">
-                            {formatCurrency(ride.fare_estimate || 0)}
-                          </div>
+                          <div className="ride-fare">{formatCurrency(ride.fare_estimate || 0)}</div>
                         </div>
-                        <Button
-                          onClick={() => handleAcceptRide(ride.id)}
-                          variant="primary"
-                          size="sm"
-                        >
+                        <Button onClick={() => handleAcceptRide(ride.id)} variant="primary" size="sm">
                           Accept
                         </Button>
                       </div>
@@ -478,7 +597,6 @@ const Dashboard = ({ onLogout }) => {
           )}
         </div>
       </div>
-    </>
   );
 };
 

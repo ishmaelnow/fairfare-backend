@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { searchAddress } from '../lib/geocoding';
 import { calculateFare, calculateDistance, formatCurrency } from '../lib/fare';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import Navbar from '../components/Navbar';
+import PaymentForm from '../components/PaymentForm';
 import './BookRide.css';
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const BookRide = ({ onLogout }) => {
   const { user } = useAuth();
@@ -27,6 +31,9 @@ const BookRide = ({ onLogout }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [bookingStep, setBookingStep] = useState('form'); // 'form' | 'payment'
+  const [clientSecret, setClientSecret] = useState(null);
+  const [pendingRide, setPendingRide] = useState(null);
   const navigate = useNavigate();
 
   // Check for active ride on mount
@@ -142,95 +149,107 @@ const BookRide = ({ onLogout }) => {
 
     setLoading(true);
     setError('');
-    setSuccess('');
 
     try {
-      // Geocode addresses if coordinates aren't set
       let pickup = pickupCoords;
       let dropoff = dropoffCoords;
 
       if (!pickup) {
-        const pickupSuggestions = await searchAddress(formData.pickupLocation);
-        if (pickupSuggestions.length === 0) {
-          throw new Error('Could not find pickup location. Please select from suggestions.');
-        }
-        pickup = { lat: pickupSuggestions[0].lat, lng: pickupSuggestions[0].lng };
+        const pickupResults = await searchAddress(formData.pickupLocation);
+        if (pickupResults.length === 0) throw new Error('Could not find pickup location. Please select from suggestions.');
+        pickup = { lat: pickupResults[0].lat, lng: pickupResults[0].lng };
       }
 
       if (!dropoff) {
-        const dropoffSuggestions = await searchAddress(formData.dropoffLocation);
-        if (dropoffSuggestions.length === 0) {
-          throw new Error('Could not find dropoff location. Please select from suggestions.');
-        }
-        dropoff = { lat: dropoffSuggestions[0].lat, lng: dropoffSuggestions[0].lng };
+        const dropoffResults = await searchAddress(formData.dropoffLocation);
+        if (dropoffResults.length === 0) throw new Error('Could not find dropoff location. Please select from suggestions.');
+        dropoff = { lat: dropoffResults[0].lat, lng: dropoffResults[0].lng };
       }
 
-      const pickupTime = formData.pickupTime 
+      const pickupTime = formData.pickupTime
         ? new Date(formData.pickupTime).toISOString()
         : new Date().toISOString();
 
-      // Calculate fare and distance
       const dist = calculateDistance(pickup.lat, pickup.lng, dropoff.lat, dropoff.lng);
       const estimatedDuration = Math.ceil(dist * 2);
       const fare = calculateFare(dist, estimatedDuration);
 
-      const { data, error: insertError } = await supabase
-        .from('rides')
-        .insert({
-          rider_id: user.id,
-          pickup_address: formData.pickupLocation,
-          pickup_lat: pickup.lat,
-          pickup_lng: pickup.lng,
-          dropoff_address: formData.dropoffLocation,
-          dropoff_lat: dropoff.lat,
-          dropoff_lng: dropoff.lng,
-          fare_estimate: fare,
-          distance_miles: dist,
-          duration_minutes: estimatedDuration,
-          status: 'matching',
-          requested_at: pickupTime,
-        })
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
-
-      setSuccess('Ride booked successfully! Redirecting...');
-      
-      // Reset form
-      setFormData({
-        pickupLocation: '',
-        dropoffLocation: '',
-        pickupTime: '',
+      // Create PaymentIntent before showing payment form
+      const res = await fetch('/.netlify/functions/create-payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: fare }),
       });
-      setPickupCoords(null);
-      setDropoffCoords(null);
-      setFareEstimate(null);
-      setDistance(null);
-      
-      // Navigate to active ride page
-      if (data) {
-        setTimeout(() => navigate(`/ride/${data.id}`), 1500);
-      } else {
-        setTimeout(() => navigate('/dashboard'), 2000);
-      }
+      const { clientSecret: cs, error: piError } = await res.json();
+      if (piError) throw new Error(piError);
+
+      setClientSecret(cs);
+      setPendingRide({
+        rider_id: user.id,
+        pickup_address: formData.pickupLocation,
+        pickup_lat: pickup.lat,
+        pickup_lng: pickup.lng,
+        dropoff_address: formData.dropoffLocation,
+        dropoff_lat: dropoff.lat,
+        dropoff_lng: dropoff.lng,
+        fare_estimate: fare,
+        distance_miles: dist,
+        duration_minutes: estimatedDuration,
+        status: 'matching',
+        requested_at: pickupTime,
+      });
+      setBookingStep('payment');
     } catch (err) {
-      setError(err.message || 'Failed to book ride. Please try again.');
+      setError(err.message || 'Failed to initiate booking. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <>
-      <></>
+  const handlePaymentSuccess = async (paymentIntentId) => {
+    try {
+      const { data, error: insertError } = await supabase
+        .from('rides')
+        .insert({ ...pendingRide, payment_intent_id: paymentIntentId, payment_status: 'paid' })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      navigate(`/ride/${data.id}`);
+    } catch (err) {
+      setError(err.message || 'Payment succeeded but failed to create ride. Contact support.');
+      setBookingStep('form');
+    }
+  };
+
+  if (bookingStep === 'payment' && clientSecret) {
+    return (
       <div className="book-ride-page">
         <div className="book-ride-container">
           <Card className="book-ride-card">
-            <h1 className="book-ride-title">Book a Ride</h1>
-            
+            <h1 className="book-ride-title">Complete Payment</h1>
             {error && <div className="book-ride-error">{error}</div>}
-            {success && <div className="book-ride-success">{success}</div>}
+            <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <PaymentForm
+                fare={pendingRide.fare_estimate}
+                onSuccess={handlePaymentSuccess}
+                onBack={() => { setBookingStep('form'); setClientSecret(null); }}
+              />
+            </Elements>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="book-ride-page">
+        <div className="book-ride-container">
+          <Card className="book-ride-card">
+            <h1 className="book-ride-title">Book a Ride</h1>
+
+            {error && <div className="book-ride-error">{error}</div>}
             
             {user && (
               <div className="book-ride-user-info">
@@ -330,13 +349,19 @@ const BookRide = ({ onLogout }) => {
                 fullWidth 
                 disabled={loading || !user || !formData.pickupLocation || !formData.dropoffLocation}
               >
-                {loading ? 'Booking...' : 'Book Ride'}
+                {loading ? 'Preparing payment...' : 'Continue to Payment →'}
               </Button>
             </form>
           </Card>
         </div>
+        <p className="book-ride-map-attribution">
+          Map ©{' '}
+          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">
+            OpenStreetMap
+          </a>{' '}
+          contributors
+        </p>
       </div>
-    </>
   );
 };
 

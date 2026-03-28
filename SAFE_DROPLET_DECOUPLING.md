@@ -4,9 +4,34 @@
 
 ### What's Running on Droplet:
 1. **Nginx** - Serving static files (landing page, PWAs)
-2. **Python Flask Backend** - Port 8001 (likely redundant now)
-3. **SSL Certificates** - Let's Encrypt (via Certbot)
-4. **Domain DNS** - Points to droplet IP
+2. **TWO Python Backends Found:**
+   - **Port 8000**: `globapp-backend` (uvicorn) - `/home/ishmael/globapp-backend/.venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8000`
+   - **Port 8001**: `fairfare-backend` (gunicorn) - `/opt/fairfare-backend/venv/bin/python3 /opt/fairfare-backend/venv/bin/gunicorn -w 4 -b 127.0.0.1:8001 app:app`
+3. **PostgreSQL** - Port 5432 (local database)
+4. **SSL Certificates** - Let's Encrypt (via Certbot)
+5. **Domain DNS** - Points to droplet IP
+
+**Note:** The nginx config shown is for `globapp.app`. We need to check the config for `fairfaretransportation.app`.
+
+### Nginx Configuration Found:
+- **Active Config**: `/etc/nginx/sites-enabled/fairfaretransportation.app` → `/etc/nginx/sites-available/fairfaretransportation.app`
+- **Backend Proxy**: All `/api/` requests → `http://127.0.0.1:8001` (fairfare-backend)
+- **Static Files**: Served from `/var/www/fairfare/` directories:
+  - Landing: `/var/www/fairfare/landing`
+  - Admin: `/var/www/fairfare/admin`
+  - Driver: `/var/www/fairfare/driver`
+  - Rider: `/var/www/fairfare/rider`
+- **Domains Configured**:
+  - `fairfaretransportation.app` (landing + API)
+  - `www.fairfaretransportation.app` (landing + API)
+  - `api.fairfaretransportation.app` (API only)
+  - `admin.fairfaretransportation.app` (Admin PWA)
+  - `driver.fairfaretransportation.app` (Driver PWA)
+  - `rider.fairfaretransportation.app` (Rider PWA)
+
+### Backend Locations:
+- **fairfare-backend**: `/opt/fairfare-backend/` (Gunicorn on port 8001) - **THIS IS REDUNDANT NOW**
+- **globapp-backend**: `/home/ishmael/globapp-backend/` (Uvicorn on port 8000) - Different project, leave alone
 
 ### What's Now on Netlify:
 - ✅ Landing PWA
@@ -56,9 +81,13 @@ cat /etc/nginx/sites-available/default
 
 **3. Document backend location:**
 ```bash
-# Find backend code
-find ~ -name "*.py" -path "*/app.py" -o -name "requirements.txt" | head -10
-ls -la ~/fairfare-pwas/
+# FairFare backend location (confirmed)
+ls -la /opt/fairfare-backend/
+cat /opt/fairfare-backend/app.py 2>/dev/null | head -20
+cat /opt/fairfare-backend/requirements.txt 2>/dev/null || echo "No requirements.txt"
+
+# Check for any other FairFare-related code
+ls -la ~/fairfare-pwas/ 2>/dev/null || echo "No ~/fairfare-pwas directory"
 ```
 
 **4. Create backup of important files:**
@@ -73,8 +102,11 @@ sudo cp -r /etc/nginx/ ./nginx-backup/
 # Backup any environment files
 cp ~/fairfare-pwas/.env* ./ 2>/dev/null || true
 
-# Backup backend code (if exists)
-cp -r ~/fairfare-pwas/backend ./ 2>/dev/null || true
+# Backup FairFare backend code (confirmed location)
+sudo cp -r /opt/fairfare-backend ./fairfare-backend-backup 2>/dev/null || echo "Backend backup failed"
+
+# Backup static files (if you want to keep them)
+sudo cp -r /var/www/fairfare ./static-files-backup 2>/dev/null || echo "Static files backup failed"
 
 # Create documentation file
 cat > README.txt << EOF
@@ -83,8 +115,13 @@ IP: 157.245.231.224
 Backup created before decoupling from FairFare PWAs
 
 Services that were running:
-- Nginx (serving static files)
-- Python Flask backend (port 8001) - if found
+- Nginx (serving static files from /var/www/fairfare/)
+- FairFare Backend: Gunicorn on port 8001 (/opt/fairfare-backend/)
+- Static files locations:
+  - Landing: /var/www/fairfare/landing
+  - Admin: /var/www/fairfare/admin
+  - Driver: /var/www/fairfare/driver
+  - Rider: /var/www/fairfare/rider
 
 To restore:
 1. Restore nginx configs from nginx-backup/
@@ -97,29 +134,41 @@ EOF
 
 ### Phase 2: Stop Services (SAFELY)
 
-**1. Stop Flask Backend (if running):**
+**1. Stop FairFare Backend (Port 8001) - Gunicorn:**
 ```bash
-# Find and stop Flask process
-sudo pkill -f "flask\|gunicorn\|python.*app.py"
+# Find the gunicorn process for fairfare-backend
+ps aux | grep "fairfare-backend.*gunicorn" | grep -v grep
 
-# Or if using systemd service:
+# Stop gunicorn processes (they're running under /opt/fairfare-backend/)
+sudo pkill -f "/opt/fairfare-backend.*gunicorn"
+
+# Verify it's stopped
+sudo ss -tlnp | grep 8001
+# Should show nothing (or only other services)
+
+# Check if there's a systemd service
+sudo systemctl list-units --all | grep fairfare
 sudo systemctl stop fairfare-backend 2>/dev/null || true
 sudo systemctl disable fairfare-backend 2>/dev/null || true
 ```
 
-**2. Stop Nginx (optional - can keep running for other purposes):**
-```bash
-# Option A: Stop nginx completely
-sudo systemctl stop nginx
-sudo systemctl disable nginx
+**⚠️ IMPORTANT:** Do NOT stop the globapp-backend (port 8000) - that's a different project!
 
-# Option B: Keep nginx running but remove site configs (safer)
-# This keeps nginx available for future use
-sudo rm /etc/nginx/sites-enabled/default
-sudo rm /etc/nginx/sites-enabled/fairfare* 2>/dev/null || true
-sudo nginx -t  # Test config
+**2. Disable FairFare Nginx Configs (Keep Nginx Running for globapp):**
+```bash
+# Option A: Disable only FairFare configs (RECOMMENDED - keeps globapp running)
+# This keeps nginx available for globapp.app
+sudo rm /etc/nginx/sites-enabled/fairfaretransportation.app
+sudo rm /etc/nginx/sites-enabled/fairfare-backend 2>/dev/null || true
+sudo nginx -t  # Test config (should still work for globapp)
 sudo systemctl reload nginx
+
+# Option B: Stop nginx completely (only if you don't need globapp either)
+# sudo systemctl stop nginx
+# sudo systemctl disable nginx
 ```
+
+**⚠️ IMPORTANT:** Option A is safer - it keeps globapp.app working while disabling FairFare.
 
 **3. Verify services stopped:**
 ```bash
@@ -131,48 +180,152 @@ sudo netstat -tlnp | grep -E ":(80|443|8001)"
 
 ### Phase 3: Update DNS (Point to Netlify)
 
-**Before doing this, make sure all Netlify sites are working!**
+**⚠️ IMPORTANT:** Before starting, ensure all Netlify sites are deployed and working!
 
-**1. Get Netlify URLs:**
-- Landing PWA: `landing-pwa-xyz.netlify.app`
-- Rider PWA: `rider-pwa.netlify.app`
-- Driver PWA: `driver-pwa.netlify.app`
-- Admin PWA: `admin-pwas.netlify.app`
+---
 
-**2. Update DNS Records:**
+#### Step 1: Find Your Netlify Site URLs
+
+Go to [Netlify Dashboard](https://app.netlify.com) and note the **default Netlify URLs** for each site:
+
+1. **Landing PWA**: `https://[your-site-name].netlify.app`
+2. **Rider PWA**: `https://[your-site-name].netlify.app`
+3. **Driver PWA**: `https://[your-site-name].netlify.app`
+4. **Admin PWA**: `https://[your-site-name].netlify.app`
+
+**Write these down - you'll need them!**
+
+---
+
+#### Step 2: Configure Custom Domains in Netlify
+
+For **each** Netlify site, add custom domains:
+
+**A. Landing PWA Site:**
+1. Go to Site Settings → Domain management
+2. Click "Add custom domain"
+3. Enter: `fairfaretransportation.app`
+4. Enter: `www.fairfaretransportation.app`
+5. Netlify will show you DNS records (save them!)
+
+**B. Rider PWA Site:**
+1. Go to Site Settings → Domain management
+2. Click "Add custom domain"
+3. Enter: `rider.fairfaretransportation.app`
+4. Netlify will show DNS records
+
+**C. Driver PWA Site:**
+1. Go to Site Settings → Domain management
+2. Click "Add custom domain"
+3. Enter: `driver.fairfaretransportation.app`
+4. Netlify will show DNS records
+
+**D. Admin PWA Site:**
+1. Go to Site Settings → Domain management
+2. Click "Add custom domain"
+3. Enter: `admin.fairfaretransportation.app`
+4. Netlify will show DNS records
+
+**⚠️ Note:** Netlify will show DNS records like:
+```
+Type: CNAME
+Name: @ (or subdomain name)
+Value: [site-name].netlify.app
+```
+
+---
+
+#### Step 3: Update DNS at Domain Registrar
 
 Go to your domain registrar (where you bought `fairfaretransportation.app`):
 
-**Option A: Point main domain to landing page**
+**Common registrars:** Namecheap, GoDaddy, Google Domains, Cloudflare, etc.
+
+**Remove OLD DNS Records (if any):**
+- Remove any A records pointing to droplet IP: `157.245.231.224`
+- Remove any CNAME records pointing to droplet
+
+**Add NEW DNS Records:**
+
+**For Root Domain (fairfaretransportation.app):**
 ```
 Type: CNAME
-Name: @ (or fairfaretransportation.app)
-Value: landing-pwa-xyz.netlify.app
+Name: @ (or leave blank, or "fairfaretransportation.app")
+Value: [your-landing-pwa-site].netlify.app
+TTL: 3600 (or Auto)
+```
+
+**For www subdomain:**
+```
+Type: CNAME
+Name: www
+Value: [your-landing-pwa-site].netlify.app
 TTL: 3600
 ```
 
-**Option B: Point subdomains to respective PWAs**
+**For Rider subdomain:**
 ```
 Type: CNAME
 Name: rider
-Value: rider-pwa.netlify.app
-TTL: 3600
-
-Type: CNAME
-Name: driver
-Value: driver-pwa.netlify.app
-TTL: 3600
-
-Type: CNAME
-Name: admin
-Value: admin-pwas.netlify.app
+Value: [your-rider-pwa-site].netlify.app
 TTL: 3600
 ```
 
-**3. Configure in Netlify:**
-- Go to each Netlify site → Domain settings
-- Add custom domain
-- Netlify will provide DNS records if needed
+**For Driver subdomain:**
+```
+Type: CNAME
+Name: driver
+Value: [your-driver-pwa-site].netlify.app
+TTL: 3600
+```
+
+**For Admin subdomain:**
+```
+Type: CNAME
+Name: admin
+Value: [your-admin-pwa-site].netlify.app
+TTL: 3600
+```
+
+**⚠️ Important Notes:**
+- Some registrars don't allow CNAME on root domain (@). If so, use Netlify's A records instead (Netlify will provide these).
+- DNS propagation takes 24-48 hours, but often works within minutes.
+- You can check propagation with: `dig fairfaretransportation.app` or `nslookup fairfaretransportation.app`
+
+---
+
+#### Step 4: Verify DNS in Netlify
+
+After adding DNS records:
+
+1. Go back to each Netlify site → Domain settings
+2. Netlify will show "DNS configuration detected" when it sees your DNS records
+3. SSL certificates will be automatically provisioned (can take a few minutes)
+
+---
+
+#### Step 5: Update Supabase Redirect URLs
+
+Go to [Supabase Dashboard](https://app.supabase.com) → Your Project → Authentication → URL Configuration:
+
+**Add these Redirect URLs:**
+```
+https://fairfaretransportation.app
+https://www.fairfaretransportation.app
+https://rider.fairfaretransportation.app
+https://driver.fairfaretransportation.app
+https://admin.fairfaretransportation.app
+```
+
+**Add these Site URLs:**
+```
+https://fairfaretransportation.app
+https://rider.fairfaretransportation.app
+https://driver.fairfaretransportation.app
+https://admin.fairfaretransportation.app
+```
+
+**Save changes!**
 
 ---
 
@@ -323,4 +476,29 @@ If something goes wrong:
 ---
 
 **Ready to proceed? Start with Phase 1 (Document Current State)!**
+
+---
+
+## ✅ Phase 1 & 2 COMPLETED (2026-01-30)
+
+**Phase 1 - Documentation:**
+- ✅ Backup created: `~/droplet-backup-20260130/`
+- ✅ Backend code backed up: `fairfare-backend-backup/`
+- ✅ Nginx configs backed up: `fairfare-nginx-config`, `fairfare-backend-nginx-config`
+- ✅ README.txt created with restoration instructions
+
+**Phase 2 - Services Stopped:**
+- ✅ FairFare backend (port 8001) stopped
+- ✅ FairFare nginx configs disabled (symlinks removed)
+- ✅ Nginx still running (for globapp.app)
+- ✅ globapp-backend still running (port 8000) - untouched
+
+**Current State:**
+- 🔴 FairFare services: **STOPPED**
+- 🟢 globapp services: **RUNNING** (untouched)
+- 🟢 Droplet: **PRESERVED** (ready for repurposing)
+
+**Next Steps:**
+- Phase 3: Update DNS to point to Netlify (when ready)
+- Phase 4: Verify Netlify sites work with custom domains
 

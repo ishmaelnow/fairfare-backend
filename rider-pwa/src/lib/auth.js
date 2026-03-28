@@ -1,9 +1,12 @@
 import { supabase } from './supabase';
 
+const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
+
 export async function signUp(email, password, fullName) {
+  const safeEmail = normalizeEmail(email);
   // Sign up with Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.signUp({
-    email,
+    email: safeEmail,
     password,
     options: {
       data: {
@@ -42,8 +45,9 @@ export async function signUp(email, password, fullName) {
 }
 
 export async function signIn(email, password) {
+  const safeEmail = normalizeEmail(email);
   const { data, error } = await supabase.auth.signInWithPassword({
-    email,
+    email: safeEmail,
     password,
   });
 

@@ -7,7 +7,6 @@ import { RideMap } from '../components/RideMap';
 import { Chat } from '../components/Chat';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import Navbar from '../components/Navbar';
 import './ActiveRide.css';
 
 const formatCurrency = (amount) => {
@@ -304,22 +303,17 @@ export default function ActiveRide() {
 
   if (loading || !ride) {
     return (
-      <>
-        <Navbar />
-        <div className="active-ride-page">
-          <div className="active-ride-loading">
-            <div className="spinner"></div>
-            <p>Loading ride details...</p>
-          </div>
+      <div className="active-ride-page">
+        <div className="active-ride-loading">
+          <div className="spinner"></div>
+          <p>Loading ride details...</p>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <></>
-      <div className="active-ride-page">
+    <div className="active-ride-page">
         <div className="active-ride-container">
           <Card className="active-ride-status-card">
             <div className="active-ride-status-header">
@@ -514,7 +508,6 @@ export default function ActiveRide() {
           )}
         </div>
       </div>
-    </>
   );
 }
 

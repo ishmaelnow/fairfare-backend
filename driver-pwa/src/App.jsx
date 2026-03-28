@@ -8,6 +8,7 @@ import DriverSignup from './pages/DriverSignup';
 import Dashboard from './pages/Dashboard';
 import MyRides from './pages/MyRides';
 import ActiveRide from './pages/ActiveRide';
+import Wallet from './pages/Wallet';
 import './App.css';
 
 function AppRoutes() {
@@ -57,9 +58,13 @@ function AppRoutes() {
             path="/my-rides" 
             element={isAuthenticated ? <MyRides onLogout={handleLogout} /> : <Navigate to="/login" />} 
           />
-          <Route 
-            path="/ride/:rideId" 
-            element={isAuthenticated ? <ActiveRide /> : <Navigate to="/login" />} 
+          <Route
+            path="/ride/:rideId"
+            element={isAuthenticated ? <ActiveRide /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/wallet"
+            element={isAuthenticated ? <Wallet /> : <Navigate to="/login" />}
           />
           <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
         </Routes>

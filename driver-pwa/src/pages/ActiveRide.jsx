@@ -8,7 +8,6 @@ import { Card } from '../components/Card';
 import { RatingModal } from '../components/RatingModal';
 import { RideMap } from '../components/RideMap';
 import { Chat } from '../components/Chat';
-import Navbar from '../components/Navbar';
 import './ActiveRide.css';
 
 export default function ActiveRide() {
@@ -184,15 +183,12 @@ export default function ActiveRide() {
 
   if (loading || !ride) {
     return (
-      <>
-        <Navbar />
-        <div className="active-driver-ride-page">
+      <div className="active-driver-ride-page">
           <div className="active-driver-ride-loading">
             <div className="spinner"></div>
             <p>Loading ride details...</p>
           </div>
         </div>
-      </>
     );
   }
 
@@ -230,9 +226,7 @@ export default function ActiveRide() {
   }[ride.status] || ride.status;
 
   return (
-    <>
-      <Navbar />
-      <div className="active-driver-ride-page">
+    <div className="active-driver-ride-page">
         <div className="active-driver-ride-container">
           <Card className="active-driver-ride-status-card">
             <div className="status-badge-container">
@@ -365,8 +359,7 @@ export default function ActiveRide() {
             />
           )}
         </div>
-      </div>
-    </>
+    </div>
   );
 }
 
