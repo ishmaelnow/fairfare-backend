@@ -4,9 +4,6 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m2
     environment:
-      ios_signing:
-        distribution_type: development
-        bundle_identifier: app.fairfaretransportation.rider
       vars:
         VITE_SUPABASE_URL: https://rnlknmceslfzlkizscpr.supabase.co
         VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJubGtubWNlc2xmemxraXpzY3ByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTUyMDgsImV4cCI6MjA5MDE3MTIwOH0.RkkkDm-FtspmYjENBptsGb5sT9uVIak_eaJvTYviiMw
@@ -24,25 +21,24 @@ workflows:
         script: cd rider-pwa && npx cap sync ios
       - name: Install CocoaPods
         script: cd rider-pwa/ios/App && pod install
-      - name: Set up code signing
-        script: xcode-project use-profiles
-      - name: Build IPA
+      - name: Build iOS
         script: |
           cd rider-pwa/ios/App
-          xcode-project build-ipa \
-            --workspace App.xcworkspace \
-            --scheme App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
     artifacts:
-      - rider-pwa/ios/App/build/ios/ipa/*.ipa
+      - rider-pwa/ios/App/build/**/*.app
 
   driver-ios:
     name: FairFare Driver iOS
     max_build_duration: 60
     instance_type: mac_mini_m2
     environment:
-      ios_signing:
-        distribution_type: development
-        bundle_identifier: app.fairfaretransportation.driver
       vars:
         VITE_SUPABASE_URL: https://rnlknmceslfzlkizscpr.supabase.co
         VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJubGtubWNlc2xmemxraXpzY3ByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTUyMDgsImV4cCI6MjA5MDE3MTIwOH0.RkkkDm-FtspmYjENBptsGb5sT9uVIak_eaJvTYviiMw
@@ -59,13 +55,15 @@ workflows:
         script: cd driver-pwa && npx cap sync ios
       - name: Install CocoaPods
         script: cd driver-pwa/ios/App && pod install
-      - name: Set up code signing
-        script: xcode-project use-profiles
-      - name: Build IPA
+      - name: Build iOS
         script: |
           cd driver-pwa/ios/App
-          xcode-project build-ipa \
-            --workspace App.xcworkspace \
-            --scheme App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
     artifacts:
-      - driver-pwa/ios/App/build/ios/ipa/*.ipa
+      - driver-pwa/ios/App/build/**/*.app
