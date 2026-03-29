@@ -6,7 +6,7 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: app.fairfaretrasportion.rider
+        bundle_identifier: app.fairfaretransportation.rider
       vars:
         VITE_SUPABASE_URL: https://rnlknmceslfzlkizscpr.supabase.co
         VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJubGtubWNlc2xmemxraXpzY3ByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTUyMDgsImV4cCI6MjA5MDE3MTIwOH0.RkkkDm-FtspmYjENBptsGb5sT9uVIak_eaJvTYviiMw
