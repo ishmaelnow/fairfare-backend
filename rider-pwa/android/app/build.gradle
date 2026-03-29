@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.fairfare.rider"
+    namespace "app.fairfaretrasportion.rider"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.fairfare.rider"
+        applicationId "app.fairfaretrasportion.rider"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
