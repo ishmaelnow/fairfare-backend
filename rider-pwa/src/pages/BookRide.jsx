@@ -175,7 +175,8 @@ const BookRide = ({ onLogout }) => {
       const fare = calculateFare(dist, estimatedDuration);
 
       // Create PaymentIntent before showing payment form
-      const res = await fetch('/.netlify/functions/create-payment-intent', {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+      const res = await fetch(`${apiBase}/.netlify/functions/create-payment-intent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: fare }),

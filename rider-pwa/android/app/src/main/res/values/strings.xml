@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FairFare Rider</string>
+    <string name="title_activity_main">FairFare Rider</string>
+    <string name="package_name">com.fairfare.rider</string>
+    <string name="custom_url_scheme">com.fairfare.rider</string>
+</resources>
