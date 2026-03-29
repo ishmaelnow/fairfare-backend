@@ -10,9 +10,8 @@ workflows:
       vars:
         VITE_SUPABASE_URL: https://rnlknmceslfzlkizscpr.supabase.co
         VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJubGtubWNlc2xmemxraXpzY3ByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTUyMDgsImV4cCI6MjA5MDE3MTIwOH0.RkkkDm-FtspmYjENBptsGb5sT9uVIak_eaJvTYviiMw
-        VITE_STRIPE_PUBLISHABLE_KEY: $VITE_STRIPE_PUBLISHABLE_KEY
+        VITE_STRIPE_PUBLISHABLE_KEY: pk_test_51T6JXOBSNeuyYeB4ll0mvO90ucF6HHMYIBuDOUAsOcjseiUWgV8Dyl1w1NdKLo90qlFydtpI05vxzKyNy2NF8duH00DoGYNRjg
         VITE_API_BASE_URL: https://rider.fairfaretransportation.app
-        APP_STORE_CONNECT_KEY_IDENTIFIER: T9XL46QAQ8
       node: 22.12.0
       xcode: latest
       cocoapods: default
@@ -27,7 +26,7 @@ workflows:
         script: cd rider-pwa/ios/App && pod install
       - name: Set up code signing
         script: xcode-project use-profiles
-      - name: Build iOS
+      - name: Build IPA
         script: |
           cd rider-pwa/ios/App
           xcode-project build-ipa \
@@ -35,10 +34,6 @@ workflows:
             --scheme App
     artifacts:
       - rider-pwa/ios/App/build/ios/ipa/*.ipa
-    publishing:
-      app_store_connect:
-        api_key: $APP_STORE_CONNECT_API_KEY
-        submit_to_testflight: true
 
   driver-ios:
     name: FairFare Driver iOS
@@ -52,7 +47,6 @@ workflows:
         VITE_SUPABASE_URL: https://rnlknmceslfzlkizscpr.supabase.co
         VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJubGtubWNlc2xmemxraXpzY3ByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTUyMDgsImV4cCI6MjA5MDE3MTIwOH0.RkkkDm-FtspmYjENBptsGb5sT9uVIak_eaJvTYviiMw
         VITE_API_BASE_URL: https://driver.fairfaretransportation.app
-        APP_STORE_CONNECT_KEY_IDENTIFIER: T9XL46QAQ8
       node: 22.12.0
       xcode: latest
       cocoapods: default
@@ -67,7 +61,7 @@ workflows:
         script: cd driver-pwa/ios/App && pod install
       - name: Set up code signing
         script: xcode-project use-profiles
-      - name: Build iOS
+      - name: Build IPA
         script: |
           cd driver-pwa/ios/App
           xcode-project build-ipa \
@@ -75,7 +69,3 @@ workflows:
             --scheme App
     artifacts:
       - driver-pwa/ios/App/build/ios/ipa/*.ipa
-    publishing:
-      app_store_connect:
-        api_key: $APP_STORE_CONNECT_API_KEY
-        submit_to_testflight: true
