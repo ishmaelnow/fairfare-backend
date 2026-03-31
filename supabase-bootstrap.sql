@@ -389,7 +389,36 @@ with check (
 );
 
 -- =====================================================
--- 5) Realtime for rides/messages
+-- 5) Auto-update driver rating_avg on every rating insert/update
+-- =====================================================
+
+create or replace function public.recalculate_driver_rating()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.driver_profiles
+  set rating_avg = (
+    select coalesce(avg(rider_rating::numeric), 0)
+    from public.ratings
+    where driver_id = new.driver_id
+      and rider_rating is not null
+  )
+  where id = new.driver_id;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_recalculate_driver_rating on public.ratings;
+create trigger trg_recalculate_driver_rating
+after insert or update on public.ratings
+for each row
+execute function public.recalculate_driver_rating();
+
+-- =====================================================
+-- 6) Realtime for rides/messages
 -- =====================================================
 
 do $$

@@ -3,14 +3,12 @@ import { registerSW } from 'virtual:pwa-register'
 import './index.css'
 import App from './App.jsx'
 
-// Register service worker for PWA
-const updateSW = registerSW({
-  onNeedRefresh() {
-    console.log('New content available, please refresh.')
-  },
-  onOfflineReady() {
-    console.log('App ready to work offline')
-  },
-})
+// Skip service worker in mobile builds — Capacitor WebView doesn't support it
+if (import.meta.env.MODE !== 'mobile') {
+  registerSW({
+    onNeedRefresh() { console.log('New content available, please refresh.') },
+    onOfflineReady() { console.log('App ready to work offline') },
+  });
+}
 
 createRoot(document.getElementById('root')).render(<App />)

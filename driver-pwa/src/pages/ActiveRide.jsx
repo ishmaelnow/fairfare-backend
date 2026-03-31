@@ -19,6 +19,7 @@ export default function ActiveRide() {
   const [updating, setUpdating] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [locationPermission, setLocationPermission] = useState('unknown');
 
   useEffect(() => {
     if (!rideId) return;
@@ -42,29 +43,30 @@ export default function ActiveRide() {
       .subscribe();
 
     let locationInterval;
-    if (navigator.geolocation) {
-      const updateLocation = () => {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            const { latitude, longitude } = position.coords;
-            await supabase
-              .from('rides')
-              .update({
-                driver_current_lat: latitude,
-                driver_current_lng: longitude,
-                last_location_update: new Date().toISOString(),
-              })
-              .eq('id', rideId);
-          },
-          (error) => {
-            console.error('Error getting location:', error);
-          },
-          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-        );
-      };
 
+    const updateLocation = () => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          setLocationPermission('granted');
+          const { latitude, longitude } = position.coords;
+          await supabase.from('rides').update({
+            driver_current_lat: latitude,
+            driver_current_lng: longitude,
+            last_location_update: new Date().toISOString(),
+          }).eq('id', rideId);
+        },
+        (error) => {
+          if (error.code === 1) setLocationPermission('denied');
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      );
+    };
+
+    if (navigator.geolocation) {
       updateLocation();
       locationInterval = setInterval(updateLocation, 10000);
+    } else {
+      setLocationPermission('denied');
     }
 
     return () => {
@@ -166,7 +168,7 @@ export default function ActiveRide() {
       await supabase.from('ratings').insert({
         ride_id: ride.id,
         rider_id: ride.rider_id,
-        driver_id: user.id,
+        driver_id: ride.driver_id,
         driver_rating: rating,
         driver_comment: comment,
       });
@@ -236,6 +238,21 @@ export default function ActiveRide() {
               </div>
             </div>
           </Card>
+
+          {locationPermission === 'denied' && (
+            <div className="location-permission-banner">
+              <span>📍</span>
+              <div>
+                <strong>Location access denied</strong>
+                <span> — Enable location in device settings then refresh.</span>
+              </div>
+            </div>
+          )}
+          {locationPermission === 'granted' && (
+            <div className="location-permission-ok">
+              <span>📡</span><span>Sharing live location with rider</span>
+            </div>
+          )}
 
           <Card className="active-driver-ride-card">
             <h3 className="section-title">Trip Details</h3>

@@ -1,0 +1,69 @@
+workflows:
+  rider-ios:
+    name: FairFare Rider iOS
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      vars:
+        VITE_SUPABASE_URL: https://rnlknmceslfzlkizscpr.supabase.co
+        VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJubGtubWNlc2xmemxraXpzY3ByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTUyMDgsImV4cCI6MjA5MDE3MTIwOH0.RkkkDm-FtspmYjENBptsGb5sT9uVIak_eaJvTYviiMw
+        VITE_STRIPE_PUBLISHABLE_KEY: pk_test_51T6JXOBSNeuyYeB4ll0mvO90ucF6HHMYIBuDOUAsOcjseiUWgV8Dyl1w1NdKLo90qlFydtpI05vxzKyNy2NF8duH00DoGYNRjg
+        VITE_API_BASE_URL: https://rider.fairfaretransportation.app
+      node: 22.12.0
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install web dependencies
+        script: cd rider-pwa && npm install --legacy-peer-deps
+      - name: Build web app
+        script: cd rider-pwa && npx vite build --mode mobile
+      - name: Capacitor sync
+        script: cd rider-pwa && npx cap sync ios
+      - name: Install CocoaPods
+        script: cd rider-pwa/ios/App && pod install
+      - name: Build iOS
+        script: |
+          cd rider-pwa/ios/App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
+    artifacts:
+      - rider-pwa/ios/App/build/**/*.app
+
+  driver-ios:
+    name: FairFare Driver iOS
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      vars:
+        VITE_SUPABASE_URL: https://rnlknmceslfzlkizscpr.supabase.co
+        VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJubGtubWNlc2xmemxraXpzY3ByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTUyMDgsImV4cCI6MjA5MDE3MTIwOH0.RkkkDm-FtspmYjENBptsGb5sT9uVIak_eaJvTYviiMw
+        VITE_API_BASE_URL: https://driver.fairfaretransportation.app
+      node: 22.12.0
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install web dependencies
+        script: cd driver-pwa && npm install --legacy-peer-deps
+      - name: Build web app
+        script: cd driver-pwa && npx vite build --mode mobile
+      - name: Capacitor sync
+        script: cd driver-pwa && npx cap sync ios
+      - name: Install CocoaPods
+        script: cd driver-pwa/ios/App && pod install
+      - name: Build iOS
+        script: |
+          cd driver-pwa/ios/App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
+    artifacts:
+      - driver-pwa/ios/App/build/**/*.app

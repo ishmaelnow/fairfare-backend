@@ -5,9 +5,19 @@ import { Card } from '../components/Card';
 import { RatingModal } from '../components/RatingModal';
 import { RideMap } from '../components/RideMap';
 import { Chat } from '../components/Chat';
+import { RideAlert } from '../components/RideAlert';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import './ActiveRide.css';
+
+function distanceMiles(lat1, lng1, lat2, lng2) {
+  const R = 3958.8;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-US', {
@@ -27,7 +37,20 @@ export default function ActiveRide() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [hasRated, setHasRated] = useState(false);
   const [showChat, setShowChat] = useState(true);
+  const [alerts, setAlerts] = useState([]);
   const rideRef = useRef(null);
+  const alertedDistanceRef = useRef({ half: false });
+  const alertIdCounter = useRef(0);
+
+  const pushAlert = useCallback((type, icon, title, message, ms = 8000) => {
+    const id = ++alertIdCounter.current;
+    setAlerts(prev => [...prev, { id, type, icon, title, message }]);
+    if (ms) setTimeout(() => setAlerts(prev => prev.filter(a => a.id !== id)), ms);
+  }, []);
+
+  const dismissAlert = useCallback((id) => {
+    setAlerts(prev => prev.filter(a => a.id !== id));
+  }, []);
 
   useEffect(() => {
     rideRef.current = ride;
@@ -57,23 +80,33 @@ export default function ActiveRide() {
         },
         (payload) => {
           const updatedRide = payload.new;
-          
-          setRide((currentRide) => {
-            const previousDriverId = currentRide?.driver_id;
-            
-            if (updatedRide.driver_id && updatedRide.driver_id !== previousDriverId) {
-              loadDriver(updatedRide.driver_id).then(() => {
-                setShowChat(true);
-              }).catch(err => {
-                console.error('Error loading driver:', err);
-              });
-            } else if (!updatedRide.driver_id && previousDriverId) {
-              setDriver(null);
-              setShowChat(false);
+          const currentRide = rideRef.current;
+          const previousDriverId = currentRide?.driver_id;
+          const prevStatus = currentRide?.status;
+
+          setRide(updatedRide);
+
+          if (updatedRide.driver_id && updatedRide.driver_id !== previousDriverId) {
+            loadDriver(updatedRide.driver_id).then(() => setShowChat(true))
+              .catch(err => console.error('Error loading driver:', err));
+          } else if (!updatedRide.driver_id && previousDriverId) {
+            setDriver(null);
+            setShowChat(false);
+          }
+
+          if (updatedRide.status !== prevStatus) {
+            if (updatedRide.driver_id && !previousDriverId) {
+              pushAlert('success', '🚗', 'Driver Assigned!', 'Your driver is on the way.');
+            } else if (updatedRide.status === 'arriving') {
+              pushAlert('warning', '📍', 'Driver Arriving!', 'Your driver is at the pickup location.');
+              alertedDistanceRef.current.half = true;
+            } else if (updatedRide.status === 'in_progress') {
+              pushAlert('info', '🏎️', 'Trip Started', 'Enjoy your ride!');
+              alertedDistanceRef.current.half = false;
+            } else if (updatedRide.status === 'completed') {
+              pushAlert('success', '🎉', "You've Arrived!", 'Please rate your driver.');
             }
-            
-            return updatedRide;
-          });
+          }
         }
       )
       .subscribe();
@@ -96,6 +129,16 @@ export default function ActiveRide() {
       setShowChat(false);
     }
   }, [ride?.driver_id, ride?.id]);
+
+  useEffect(() => {
+    if (!ride?.driver_current_lat || !ride?.driver_current_lng || !ride?.pickup_lat || !ride?.pickup_lng) return;
+    if (ride.status !== 'accepted') return;
+    const dist = distanceMiles(ride.driver_current_lat, ride.driver_current_lng, ride.pickup_lat, ride.pickup_lng);
+    if (dist <= 0.5 && !alertedDistanceRef.current.half) {
+      alertedDistanceRef.current.half = true;
+      pushAlert('info', '⏱️', 'Driver Nearby', `Your driver is ${dist < 0.1 ? 'less than 0.1' : dist.toFixed(1)} miles away.`);
+    }
+  }, [ride?.driver_current_lat, ride?.driver_current_lng]);
 
   const loadRide = useCallback(async (showLoading = true) => {
     if (!rideId) return;
@@ -217,21 +260,7 @@ export default function ActiveRide() {
       });
     }
 
-    const { data: allRatings } = await supabase
-      .from('ratings')
-      .select('rider_rating')
-      .eq('driver_id', ride.driver_id)
-      .not('rider_rating', 'is', null);
-
-    if (allRatings && allRatings.length > 0) {
-      const avgRating =
-        allRatings.reduce((sum, r) => sum + (r.rider_rating || 0), 0) / allRatings.length;
-      await supabase
-        .from('driver_profiles')
-        .update({ rating_avg: avgRating })
-        .eq('id', ride.driver_id);
-    }
-
+    // rating_avg updated automatically by DB trigger
     setShowRatingModal(false);
     setHasRated(true);
   };
@@ -507,6 +536,7 @@ export default function ActiveRide() {
             />
           )}
         </div>
+      <RideAlert alerts={alerts} onDismiss={dismissAlert} />
       </div>
   );
 }
