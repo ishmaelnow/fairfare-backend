@@ -110,13 +110,17 @@ function App() {
 
         <div className="apps-grid">
           <a href={riderUrl} className="app-card rider" {...externalLinkProps}>
-            <div className="icon">🚗</div>
+            <div className="vehicle-icon">
+              <img src="/images/pavan.png" alt="FairFare rider vehicle" />
+            </div>
             <h2>Rider</h2>
             <p>Book rides and track your driver in real-time</p>
           </a>
 
           <a href={driverUrl} className="app-card driver" {...externalLinkProps}>
-            <div className="icon">🚙</div>
+            <div className="vehicle-icon">
+              <img src="/images/left-image.png" alt="FairFare driver SUV taxi" />
+            </div>
             <h2>Driver</h2>
             <p>Accept rides and manage your trips</p>
           </a>
