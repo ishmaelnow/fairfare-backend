@@ -6,6 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:mobile": "vite build --mode mobile",
+    "sync:android": "npm run build:mobile && npx cap sync android",
+    "sync:ios": "npm run build:mobile && npx cap sync ios",
+    "open:android": "npx cap open android",
+    "open:ios": "npx cap open ios",
     "lint": "eslint .",
     "preview": "vite preview"
   },

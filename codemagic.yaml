@@ -1,69 +1,116 @@
 workflows:
+  rider-android:
+    name: FairFare Rider Android
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      groups:
+        - fairfare-production
+      vars:
+        APP_DIR: rider-pwa
+      node: 22.12.0
+    scripts:
+      - name: Install web dependencies
+        script: cd "$APP_DIR" && npm install --legacy-peer-deps
+      - name: Build web app for mobile
+        script: cd "$APP_DIR" && npm run build:mobile
+      - name: Sync Capacitor Android
+        script: cd "$APP_DIR" && npx cap sync android
+      - name: Build Android release bundle
+        script: cd "$APP_DIR/android" && ./gradlew bundleRelease
+    artifacts:
+      - rider-pwa/android/app/build/outputs/**/*.aab
+
+  driver-android:
+    name: FairFare Driver Android
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      groups:
+        - fairfare-production
+      vars:
+        APP_DIR: driver-pwa
+      node: 22.12.0
+    scripts:
+      - name: Install web dependencies
+        script: cd "$APP_DIR" && npm install --legacy-peer-deps
+      - name: Build web app for mobile
+        script: cd "$APP_DIR" && npm run build:mobile
+      - name: Sync Capacitor Android
+        script: cd "$APP_DIR" && npx cap sync android
+      - name: Build Android release bundle
+        script: cd "$APP_DIR/android" && ./gradlew bundleRelease
+    artifacts:
+      - driver-pwa/android/app/build/outputs/**/*.aab
+
   rider-ios:
     name: FairFare Rider iOS
     max_build_duration: 60
     instance_type: mac_mini_m2
     environment:
+      groups:
+        - fairfare-production
+        - app-store-connect
       vars:
-        VITE_SUPABASE_URL: https://rnlknmceslfzlkizscpr.supabase.co
-        VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJubGtubWNlc2xmemxraXpzY3ByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTUyMDgsImV4cCI6MjA5MDE3MTIwOH0.RkkkDm-FtspmYjENBptsGb5sT9uVIak_eaJvTYviiMw
-        VITE_STRIPE_PUBLISHABLE_KEY: pk_test_51T6JXOBSNeuyYeB4ll0mvO90ucF6HHMYIBuDOUAsOcjseiUWgV8Dyl1w1NdKLo90qlFydtpI05vxzKyNy2NF8duH00DoGYNRjg
-        VITE_API_BASE_URL: https://rider.fairfaretransportation.app
+        APP_DIR: rider-pwa
+        XCODE_WORKSPACE: rider-pwa/ios/App/App.xcworkspace
+        XCODE_SCHEME: App
       node: 22.12.0
       xcode: latest
       cocoapods: default
+    integrations:
+      app_store_connect: codemagic
     scripts:
       - name: Install web dependencies
-        script: cd rider-pwa && npm install --legacy-peer-deps
-      - name: Build web app
-        script: cd rider-pwa && npx vite build --mode mobile
-      - name: Capacitor sync
-        script: cd rider-pwa && npx cap sync ios
+        script: cd "$APP_DIR" && npm install --legacy-peer-deps
+      - name: Build web app for mobile
+        script: cd "$APP_DIR" && npm run build:mobile
+      - name: Sync Capacitor iOS
+        script: cd "$APP_DIR" && npx cap sync ios
       - name: Install CocoaPods
-        script: cd rider-pwa/ios/App && pod install
-      - name: Build iOS
+        script: cd "$APP_DIR/ios/App" && pod install
+      - name: Set up code signing
+        script: xcode-project use-profiles
+      - name: Build signed iOS archive
         script: |
-          cd rider-pwa/ios/App
-          xcodebuild \
-            -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Debug \
-            -sdk iphoneos \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
     artifacts:
-      - rider-pwa/ios/App/build/**/*.app
+      - build/ios/ipa/*.ipa
 
   driver-ios:
     name: FairFare Driver iOS
     max_build_duration: 60
     instance_type: mac_mini_m2
     environment:
+      groups:
+        - fairfare-production
+        - app-store-connect
       vars:
-        VITE_SUPABASE_URL: https://rnlknmceslfzlkizscpr.supabase.co
-        VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJubGtubWNlc2xmemxraXpzY3ByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTUyMDgsImV4cCI6MjA5MDE3MTIwOH0.RkkkDm-FtspmYjENBptsGb5sT9uVIak_eaJvTYviiMw
-        VITE_API_BASE_URL: https://driver.fairfaretransportation.app
+        APP_DIR: driver-pwa
+        XCODE_WORKSPACE: driver-pwa/ios/App/App.xcworkspace
+        XCODE_SCHEME: App
       node: 22.12.0
       xcode: latest
       cocoapods: default
+    integrations:
+      app_store_connect: codemagic
     scripts:
       - name: Install web dependencies
-        script: cd driver-pwa && npm install --legacy-peer-deps
-      - name: Build web app
-        script: cd driver-pwa && npx vite build --mode mobile
-      - name: Capacitor sync
-        script: cd driver-pwa && npx cap sync ios
+        script: cd "$APP_DIR" && npm install --legacy-peer-deps
+      - name: Build web app for mobile
+        script: cd "$APP_DIR" && npm run build:mobile
+      - name: Sync Capacitor iOS
+        script: cd "$APP_DIR" && npx cap sync ios
       - name: Install CocoaPods
-        script: cd driver-pwa/ios/App && pod install
-      - name: Build iOS
+        script: cd "$APP_DIR/ios/App" && pod install
+      - name: Set up code signing
+        script: xcode-project use-profiles
+      - name: Build signed iOS archive
         script: |
-          cd driver-pwa/ios/App
-          xcodebuild \
-            -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Debug \
-            -sdk iphoneos \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
     artifacts:
-      - driver-pwa/ios/App/build/**/*.app
+      - build/ios/ipa/*.ipa

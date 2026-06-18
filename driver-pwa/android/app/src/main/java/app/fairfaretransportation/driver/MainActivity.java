@@ -1,4 +1,4 @@
-package com.fairfare.rider;
+package app.fairfaretransportation.driver;
 
 import com.getcapacitor.BridgeActivity;
 

@@ -41,7 +41,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       react(),
-      stripeDevPlugin(env.STRIPE_SECRET_KEY),
+      mode === 'development' && env.STRIPE_SECRET_KEY ? stripeDevPlugin(env.STRIPE_SECRET_KEY) : null,
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
@@ -88,7 +88,7 @@ export default defineConfig(({ mode }) => {
           ]
         }
       })
-    ],
+    ].filter(Boolean),
     server: {
       port: 3001,
       open: true,
