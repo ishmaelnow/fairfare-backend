@@ -1,8 +1,17 @@
+## Codemagic mobile-store pipeline.
+## This file is intentionally scoped to the `mobile` Git branch so it does
+## not interfere with the live web production branch `pwas`.
 workflows:
   rider-android:
     name: FairFare Rider Android
     max_build_duration: 60
     instance_type: linux_x2
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: mobile
+          include: true
     environment:
       groups:
         - fairfare-production
@@ -16,6 +25,9 @@ workflows:
         script: cd "$APP_DIR" && npm run build:mobile
       - name: Sync Capacitor Android
         script: cd "$APP_DIR" && npx cap sync android
+      # Android signing values should be added in Codemagic UI or the
+      # `fairfare-production` environment group before this step runs.
+      # Typical inputs: keystore file, keystore password, key alias, key password.
       - name: Build Android release bundle
         script: cd "$APP_DIR/android" && ./gradlew bundleRelease
     artifacts:
@@ -25,6 +37,12 @@ workflows:
     name: FairFare Driver Android
     max_build_duration: 60
     instance_type: linux_x2
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: mobile
+          include: true
     environment:
       groups:
         - fairfare-production
@@ -38,6 +56,9 @@ workflows:
         script: cd "$APP_DIR" && npm run build:mobile
       - name: Sync Capacitor Android
         script: cd "$APP_DIR" && npx cap sync android
+      # Android signing values should be added in Codemagic UI or the
+      # `fairfare-production` environment group before this step runs.
+      # Typical inputs: keystore file, keystore password, key alias, key password.
       - name: Build Android release bundle
         script: cd "$APP_DIR/android" && ./gradlew bundleRelease
     artifacts:
@@ -47,6 +68,12 @@ workflows:
     name: FairFare Rider iOS
     max_build_duration: 60
     instance_type: mac_mini_m2
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: mobile
+          include: true
     environment:
       groups:
         - fairfare-production
@@ -69,6 +96,8 @@ workflows:
         script: cd "$APP_DIR" && npx cap sync ios
       - name: Install CocoaPods
         script: cd "$APP_DIR/ios/App" && pod install
+      # iOS signing is handled through the App Store Connect integration plus
+      # the certificates/profiles uploaded in Codemagic or matched by use-profiles.
       - name: Set up code signing
         script: xcode-project use-profiles
       - name: Build signed iOS archive
@@ -83,6 +112,12 @@ workflows:
     name: FairFare Driver iOS
     max_build_duration: 60
     instance_type: mac_mini_m2
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: mobile
+          include: true
     environment:
       groups:
         - fairfare-production
@@ -105,6 +140,8 @@ workflows:
         script: cd "$APP_DIR" && npx cap sync ios
       - name: Install CocoaPods
         script: cd "$APP_DIR/ios/App" && pod install
+      # iOS signing is handled through the App Store Connect integration plus
+      # the certificates/profiles uploaded in Codemagic or matched by use-profiles.
       - name: Set up code signing
         script: xcode-project use-profiles
       - name: Build signed iOS archive
