@@ -5,7 +5,7 @@ workflows:
   rider-android:
     name: FairFare Rider Android
     max_build_duration: 60
-    instance_type: linux_x2
+    instance_type: linux
     triggering:
       events:
         - push
@@ -36,7 +36,7 @@ workflows:
   driver-android:
     name: FairFare Driver Android
     max_build_duration: 60
-    instance_type: linux_x2
+    instance_type: linux
     triggering:
       events:
         - push
