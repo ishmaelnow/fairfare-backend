@@ -29,7 +29,7 @@ workflows:
       # `fairfare-production` environment group before this step runs.
       # Typical inputs: keystore file, keystore password, key alias, key password.
       - name: Build Android release bundle
-        script: cd "$APP_DIR/android" && ./gradlew bundleRelease
+        script: cd "$APP_DIR/android" && chmod +x ./gradlew && ./gradlew bundleRelease
     artifacts:
       - rider-pwa/android/app/build/outputs/**/*.aab
 
@@ -60,7 +60,7 @@ workflows:
       # `fairfare-production` environment group before this step runs.
       # Typical inputs: keystore file, keystore password, key alias, key password.
       - name: Build Android release bundle
-        script: cd "$APP_DIR/android" && ./gradlew bundleRelease
+        script: cd "$APP_DIR/android" && chmod +x ./gradlew && ./gradlew bundleRelease
     artifacts:
       - driver-pwa/android/app/build/outputs/**/*.aab
 
