@@ -54,6 +54,18 @@ export async function signIn(email, password) {
   return data;
 }
 
+export async function signInWithGoogle() {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/login`,
+    },
+  });
+
+  if (error) throw error;
+  return data;
+}
+
 export async function requestPasswordReset(email, redirectPath = '/reset-password') {
   const safeEmail = normalizeEmail(email);
   const redirectTo = `${window.location.origin}${redirectPath}`;
@@ -92,13 +104,46 @@ export async function getCurrentUser() {
 
   if (!user) return null;
 
-  const { data: profile } = await supabase
+  const { data: existingProfile, error: profileLookupError } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .maybeSingle();
 
-  if (!profile) return null;
+  if (profileLookupError) throw profileLookupError;
+
+  let profile = existingProfile;
+
+  // OAuth users may not have a profile if the database trigger is absent or
+  // still running. Create only a missing Rider profile; never overwrite an
+  // existing Driver or Admin role.
+  if (!profile) {
+    const { data: createdProfile, error: profileInsertError } = await supabase
+      .from('profiles')
+      .insert({
+        id: user.id,
+        role: 'rider',
+        email: user.email,
+        full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+      })
+      .select('*')
+      .single();
+
+    if (profileInsertError?.code === '23505') {
+      const { data: concurrentProfile, error: concurrentLookupError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (concurrentLookupError) throw concurrentLookupError;
+      profile = concurrentProfile;
+    } else if (profileInsertError) {
+      throw profileInsertError;
+    } else {
+      profile = createdProfile;
+    }
+  }
 
   return {
     id: user.id,
@@ -108,4 +153,3 @@ export async function getCurrentUser() {
     phone: profile.phone,
   };
 }
-
