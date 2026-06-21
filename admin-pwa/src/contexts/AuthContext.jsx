@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { getCurrentUser } from '../lib/auth';
+import { getCurrentUser, signOut } from '../lib/auth';
 
 const AuthContext = createContext(undefined);
 
@@ -11,6 +11,11 @@ export function AuthProvider({ children }) {
   const refreshUser = async () => {
     try {
       const currentUser = await getCurrentUser();
+      if (currentUser && currentUser.role !== 'admin') {
+        await signOut();
+        setUser(null);
+        return;
+      }
       setUser(currentUser);
     } catch (error) {
       console.error('Error refreshing user:', error);
@@ -44,5 +49,4 @@ export function useAuth() {
   }
   return context;
 }
-
 

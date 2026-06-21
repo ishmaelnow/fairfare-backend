@@ -57,6 +57,34 @@ export async function signIn(email, password) {
   return data;
 }
 
+export async function requestPasswordReset(email, redirectPath = '/reset-password') {
+  const safeEmail = normalizeEmail(email);
+  const redirectTo = `${window.location.origin}${redirectPath}`;
+
+  const { data, error } = await supabase.auth.resetPasswordForEmail(safeEmail, {
+    redirectTo,
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function exchangeRecoveryCode(code) {
+  if (!code) {
+    throw new Error('Missing recovery code.');
+  }
+
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error) throw error;
+  return data;
+}
+
+export async function updatePassword(password) {
+  const { data, error } = await supabase.auth.updateUser({ password });
+  if (error) throw error;
+  return data;
+}
+
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
@@ -92,5 +120,4 @@ export async function updateProfile(userId, updates) {
 
   if (error) throw error;
 }
-
 

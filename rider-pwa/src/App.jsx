@@ -4,6 +4,7 @@ import { signOut } from './lib/auth';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ResetPassword from './pages/ResetPassword';
 import BookRide from './pages/BookRide';
 import Dashboard from './pages/Dashboard';
 import ActiveRide from './pages/ActiveRide';
@@ -43,6 +44,10 @@ function AppRoutes() {
           <Route 
             path="/register" 
             element={!isAuthenticated ? <Register /> : <Navigate to="/dashboard" />} 
+          />
+          <Route
+            path="/reset-password"
+            element={<ResetPassword />}
           />
           <Route 
             path="/book-ride" 

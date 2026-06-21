@@ -36,6 +36,21 @@
   text-decoration: underline;
 }
 
+.reset-link {
+  margin-top: 0.75rem;
+  color: #6b7280;
+}
+
+.reset-link a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.reset-link a:hover {
+  text-decoration: underline;
+}
+
 .password-wrapper {
   position: relative;
   display: flex;
@@ -63,3 +78,44 @@
   color: #2563eb;
 }
 
+.reset-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.reset-card {
+  max-width: 420px;
+  text-align: center;
+}
+
+.reset-card h1 {
+  color: #2563eb;
+  margin-bottom: 0.5rem;
+}
+
+.reset-note {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.reset-success {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  text-align: left;
+}
+
+.reset-form {
+  text-align: left;
+}
+
+.helper-text {
+  margin-top: 1rem;
+  color: #6b7280;
+}

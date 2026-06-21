@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { signIn } from '../lib/auth';
 import './Login.css';
 
@@ -18,6 +18,7 @@ const Login = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const location = useLocation();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -93,6 +94,10 @@ const Login = ({ onLogin }) => {
           
           <p className="register-link">
             Don't have an account? <Link to="/register">Register here</Link>
+          </p>
+          {location.state?.message && <div className="reset-success">{location.state.message}</div>}
+          <p className="reset-link">
+            <Link to="/reset-password">Forgot password?</Link>
           </p>
         </div>
       </div>

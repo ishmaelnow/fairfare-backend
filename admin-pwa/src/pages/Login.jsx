@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { signIn } from '../lib/auth';
 import './Login.css';
 
@@ -7,6 +7,7 @@ const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const location = useLocation();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -68,6 +69,11 @@ const Login = ({ onLogin }) => {
               {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
+
+          {location.state?.message && <div className="reset-success">{location.state.message}</div>}
+          <p className="reset-link">
+            <Link to="/reset-password">Forgot password?</Link>
+          </p>
         </div>
       </div>
     </div>

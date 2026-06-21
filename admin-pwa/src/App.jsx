@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { signOut } from './lib/auth';
 import Login from './pages/Login';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import './App.css';
 
@@ -34,13 +35,17 @@ function AppRoutes() {
         <Routes>
           <Route 
             path="/login" 
-            element={!isAuthenticated ? <Login onLogin={handleLogin} /> : <Navigate to="/dashboard" />} 
+            element={!isAuthenticated ? <Login onLogin={handleLogin} /> : isAdmin ? <Navigate to="/dashboard" /> : <Login onLogin={handleLogin} />}
+          />
+          <Route
+            path="/reset-password"
+            element={<ResetPassword />}
           />
           <Route 
             path="/dashboard" 
             element={isAuthenticated && isAdmin ? <Dashboard onLogout={handleLogout} /> : <Navigate to="/login" />} 
           />
-          <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
+          <Route path="/" element={<Navigate to={isAuthenticated && isAdmin ? "/dashboard" : "/login"} />} />
         </Routes>
       </div>
     </Router>
