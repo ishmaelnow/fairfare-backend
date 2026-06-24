@@ -37,7 +37,7 @@ function App() {
 
   if (showPrivacyPolicy) {
     return (
-      <div className="app">
+      <div className="app app-shell" data-app="landing">
         <nav className="navbar">
           <div className="nav-container">
             <div className="nav-logo">
@@ -73,7 +73,7 @@ function App() {
   }
 
   return (
-    <div className="app">
+      <div className="app app-shell" data-app="landing">
       {/* Navbar */}
       <nav className="navbar">
         <div className="nav-container">

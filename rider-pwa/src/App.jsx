@@ -34,7 +34,7 @@ function AppRoutes() {
 
   return (
     <Router>
-      <div className="app">
+      <div className="app app-shell" data-app="rider">
         <Navbar />
         <Routes>
           <Route 

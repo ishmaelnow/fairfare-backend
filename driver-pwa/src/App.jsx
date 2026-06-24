@@ -36,7 +36,7 @@ function AppRoutes() {
 
   return (
     <Router>
-      <div className="app">
+      <div className="app app-shell" data-app="driver">
         <Navbar />
         <Routes>
           <Route 
