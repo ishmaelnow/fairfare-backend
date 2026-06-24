@@ -1,6 +1,6 @@
 ## Codemagic mobile-store pipeline.
-## This file is intentionally scoped to the `mobile` Git branch so it does
-## not interfere with the live web production branch `pwas`.
+## This file is intentionally scoped to the `main` Git branch so it does
+## not interfere with the legacy `pwas` branch.
 workflows:
   rider-android:
     name: FairFare Rider Android
@@ -10,7 +10,7 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: mobile
+        - pattern: main
           include: true
     environment:
       groups:
@@ -42,7 +42,7 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: mobile
+        - pattern: main
           include: true
     environment:
       groups:
@@ -74,7 +74,7 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: mobile
+        - pattern: main
           include: true
     environment:
       groups:
@@ -103,7 +103,7 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: mobile
+        - pattern: main
           include: true
     environment:
       groups:
@@ -135,7 +135,7 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: mobile
+        - pattern: main
           include: true
     environment:
       groups:
@@ -167,7 +167,7 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: mobile
+        - pattern: main
           include: true
     environment:
       groups:
@@ -211,7 +211,7 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: mobile
+        - pattern: main
           include: true
     environment:
       groups:
