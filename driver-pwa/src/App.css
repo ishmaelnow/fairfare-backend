@@ -14,6 +14,48 @@ body {
   min-height: 100vh;
 }
 
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: #dbe7ee;
+  background-image:
+    linear-gradient(135deg, rgba(16, 185, 129, 0.20), rgba(15, 23, 42, 0.14)),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.22), rgba(219, 231, 238, 0.26)),
+    url('https://tile.openstreetmap.org/12/946/1654.png');
+  background-size: cover, cover, 640px 640px;
+  background-position: center;
+  background-repeat: no-repeat, no-repeat, repeat;
+}
+
+.app-shell::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(2, 6, 23, 0.06));
+}
+
+.app-shell::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(2, 6, 23, 0.08));
+}
+
+.app-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
 .app {
   min-height: 100vh;
   display: flex;
@@ -37,7 +79,9 @@ body {
 }
 
 .card {
-  background: white;
+  background: rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.34);
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -130,7 +174,8 @@ body {
 }
 
 .header {
-  background: white;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(12px);
   padding: 1rem 2rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
