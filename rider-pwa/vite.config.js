@@ -37,8 +37,10 @@ function stripeDevPlugin(secretKey) {
 export default defineConfig(({ mode }) => {
   // Load all env vars (empty prefix = no filter, reads STRIPE_SECRET_KEY too)
   const env = loadEnv(mode, process.cwd(), '');
+  const isMobileBuild = mode === 'mobile';
 
   return {
+    base: isMobileBuild ? './' : '/',
     plugins: [
       react(),
       mode === 'development' && env.STRIPE_SECRET_KEY ? stripeDevPlugin(env.STRIPE_SECRET_KEY) : null,

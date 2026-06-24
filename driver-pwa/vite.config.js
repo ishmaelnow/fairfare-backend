@@ -2,7 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  base: mode === 'mobile' ? './' : '/',
   plugins: [
     react(),
     VitePWA({
@@ -61,4 +62,4 @@ export default defineConfig({
     port: 3002,
     open: true
   }
-})
+}))
