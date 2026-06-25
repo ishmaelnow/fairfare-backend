@@ -1,6 +1,6 @@
-## Codemagic mobile-store pipeline.
-## This file is intentionally scoped to the `main` Git branch so it does
-## not interfere with the legacy `pwas` branch.
+## Codemagic pipeline for FairFare mobile apps.
+## This file is scoped to the `main` Git branch so it tracks the current
+## source of truth and does not depend on the legacy `pwas` branch.
 workflows:
   rider-android:
     name: FairFare Rider Android
@@ -26,9 +26,6 @@ workflows:
         script: cd "$APP_DIR" && npm run build:mobile
       - name: Sync Capacitor Android
         script: cd "$APP_DIR" && npx cap sync android
-      # Android signing values should be added in Codemagic UI or the
-      # `fairfare-production` environment group before this step runs.
-      # Typical inputs: keystore file, keystore password, key alias, key password.
       - name: Build Android release bundle
         script: cd "$APP_DIR/android" && chmod +x ./gradlew && ./gradlew bundleRelease
     artifacts:
@@ -58,9 +55,6 @@ workflows:
         script: cd "$APP_DIR" && npm run build:mobile
       - name: Sync Capacitor Android
         script: cd "$APP_DIR" && npx cap sync android
-      # Android signing values should be added in Codemagic UI or the
-      # `fairfare-production` environment group before this step runs.
-      # Typical inputs: keystore file, keystore password, key alias, key password.
       - name: Build Android release APK
         script: cd "$APP_DIR/android" && chmod +x ./gradlew && ./gradlew assembleRelease
     artifacts:
@@ -119,9 +113,6 @@ workflows:
         script: cd "$APP_DIR" && npm run build:mobile
       - name: Sync Capacitor Android
         script: cd "$APP_DIR" && npx cap sync android
-      # Android signing values should be added in Codemagic UI or the
-      # `fairfare-production` environment group before this step runs.
-      # Typical inputs: keystore file, keystore password, key alias, key password.
       - name: Build Android release bundle
         script: cd "$APP_DIR/android" && chmod +x ./gradlew && ./gradlew bundleRelease
     artifacts:
@@ -151,13 +142,39 @@ workflows:
         script: cd "$APP_DIR" && npm run build:mobile
       - name: Sync Capacitor Android
         script: cd "$APP_DIR" && npx cap sync android
-      # Android signing values should be added in Codemagic UI or the
-      # `fairfare-production` environment group before this step runs.
-      # Typical inputs: keystore file, keystore password, key alias, key password.
       - name: Build Android release APK
         script: cd "$APP_DIR/android" && chmod +x ./gradlew && ./gradlew assembleRelease
     artifacts:
       - driver-pwa/android/app/build/outputs/**/*.apk
+
+  driver-android-debug:
+    name: FairFare Driver Android Debug APK
+    max_build_duration: 60
+    instance_type: linux
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+    environment:
+      groups:
+        - fairfare-production
+      vars:
+        APP_DIR: driver-pwa
+      node: 22.12.0
+      java: 21
+    scripts:
+      - name: Install web dependencies
+        script: cd "$APP_DIR" && npm install --legacy-peer-deps
+      - name: Build web app for mobile
+        script: cd "$APP_DIR" && npm run build:mobile
+      - name: Sync Capacitor Android
+        script: cd "$APP_DIR" && npx cap sync android
+      - name: Build Android debug APK
+        script: cd "$APP_DIR/android" && chmod +x ./gradlew && ./gradlew assembleDebug
+    artifacts:
+      - driver-pwa/android/app/build/outputs/apk/debug/*.apk
 
   rider-ios:
     name: FairFare Rider iOS
@@ -191,8 +208,6 @@ workflows:
         script: cd "$APP_DIR" && npx cap sync ios
       - name: Install CocoaPods
         script: cd "$APP_DIR/ios/App" && pod install
-      # iOS signing is handled through the App Store Connect integration plus
-      # the certificates/profiles uploaded in Codemagic or matched by use-profiles.
       - name: Set up code signing
         script: xcode-project use-profiles
       - name: Build signed iOS archive
@@ -235,8 +250,6 @@ workflows:
         script: cd "$APP_DIR" && npx cap sync ios
       - name: Install CocoaPods
         script: cd "$APP_DIR/ios/App" && pod install
-      # iOS signing is handled through the App Store Connect integration plus
-      # the certificates/profiles uploaded in Codemagic or matched by use-profiles.
       - name: Set up code signing
         script: xcode-project use-profiles
       - name: Build signed iOS archive
